@@ -1,0 +1,1588 @@
+import React, { useState, useEffect } from 'react';
+import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker } from 'lucide-react';
+
+export default function TruchemWebsite() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeProduct, setActiveProduct] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState('home');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [ageVerified, setAgeVerified] = useState(false);
+  const [purityValue, setPurityValue] = useState(0);
+  const [showCartPopup, setShowCartPopup] = useState(false);
+  const [addedProduct, setAddedProduct] = useState(null);
+  const [cart, setCart] = useState([
+    {
+      id: 'TC-001',
+      name: 'Retatrutide',
+      size: '10mg',
+      quantity: 2,
+      price: 285.00,
+      purity: '99.2%'
+    }
+  ]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Animated purity meter effect
+  useEffect(() => {
+    if (ageVerified && currentPage === 'home') {
+      // Reset purity to 0
+      setPurityValue(0);
+      
+      // Ultra-smooth easing function (ease-out cubic - smoother than quart)
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      
+      const targetPurity = 99.2;
+      const duration = 2500; // 2.5 seconds - sweet spot for smoothness
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeOutCubic(progress);
+        const currentValue = easedProgress * targetPurity;
+        
+        setPurityValue(currentValue);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      // Start animation after a small delay
+      setTimeout(() => {
+        animate();
+      }, 300);
+    }
+  }, [ageVerified, currentPage]);
+
+  const products = [
+    {
+      id: 'TC-001',
+      name: 'Retatrutide',
+      purity: '99.2%',
+      cas: '2381089-83-2',
+      molecular: 'C₂₂₅H₃₄₁N₆₁O₆₇S',
+      weight: '4960.37',
+      price: '$95.00',
+      priceNum: 95.00,
+      sizes: ['5mg', '10mg', '15mg', '30mg'],
+      sizesPricing: {
+        '5mg': 95.00,
+        '10mg': 179.00,
+        '15mg': 259.00,
+        '30mg': 479.00
+      },
+      badge: 'Best Seller',
+      description: 'Triple agonist GLP-1/GIP/glucagon receptor',
+      fullDescription: 'Retatrutide is a novel triple agonist research compound targeting GLP-1, GIP, and glucagon receptors. This compound represents advanced research in metabolic pathway modulation and receptor pharmacology.',
+      researchApplications: [
+        'Metabolic pathway research',
+        'Receptor binding studies',
+        'Hormonal signaling investigation',
+        'Compound pharmacokinetics analysis'
+      ],
+      storage: '2-8°C short term, -20°C long term',
+      form: 'Lyophilized powder',
+      solubility: 'Water (1 mg/ml), DMSO',
+      stability: '12 months at -20°C',
+      mechanism: 'Triple agonist simultaneously activating GLP-1, GIP, and glucagon receptors. GLP-1 pathway influences glucose-dependent insulin secretion and appetite regulation via hypothalamic signaling. GIP receptor engagement modulates incretin responses and lipid metabolism. Glucagon receptor interaction affects hepatic glucose output and energy expenditure.',
+      researchFindings: 'Research models demonstrate superior efficacy compared to single-pathway GLP-1 agonists, with statistically significant changes in body composition, metabolic markers, and energy expenditure in laboratory settings.',
+      researchDosing: 'Typical research protocols: 0.5-1mg weekly initial, gradual escalation over 4-8 weeks to 4-12mg weekly maintenance doses in research models.'
+    },
+    {
+      id: 'TC-002',
+      name: 'SLU-PP-332',
+      purity: '98.8%',
+      cas: '2919794-09-9',
+      molecular: 'C₁₉H₂₁N₃O₃',
+      weight: '339.39',
+      price: '$149.00',
+      priceNum: 149.00,
+      sizes: ['5mg', '10mg', '15mg', '30mg'],
+      sizesPricing: {
+        '5mg': 149.00,
+        '10mg': 279.00,
+        '15mg': 399.00,
+        '30mg': 729.00
+      },
+      badge: 'Best Seller',
+      description: 'Exercise mimetic compound for research',
+      fullDescription: 'SLU-PP-332 is an investigational exercise mimetic compound designed for laboratory research into metabolic and physiological responses.',
+      researchApplications: [
+        'Metabolic response studies',
+        'Cellular energy pathway research',
+        'Mitochondrial function investigation',
+        'Exercise physiology modeling'
+      ],
+      storage: '-20°C, protected from moisture',
+      form: 'Lyophilized powder',
+      solubility: 'DMSO (50 mg/ml), ethanol',
+      stability: '24 months at -20°C',
+      mechanism: 'ERRα/γ agonist that activates estrogen-related receptors, upregulating PGC-1α signaling (master regulator of mitochondrial biogenesis). Enhances oxidative metabolism in skeletal muscle tissue and influences AMPK pathways associated with cellular energy sensing.',
+      researchFindings: 'Published research (Nature Metabolism, 2023) documented 70-80% improvements in endurance capacity in sedentary models, with metabolic adaptations comparable to 8 weeks of intensive endurance training protocols. Studies show increased mitochondrial density and oxidative fiber-type composition.',
+      researchDosing: 'Typical research protocols: 10-30mg daily, administered 60 minutes prior to activity in research models.'
+    },
+    {
+      id: 'TC-003',
+      name: 'BPC-157 / TB-500',
+      purity: '99.5%',
+      cas: '137525-51-0',
+      molecular: 'C₆₂H₉₈N₁₆O₂₂',
+      weight: '1419.55',
+      price: '$89.00',
+      priceNum: 89.00,
+      sizes: ['5mg', '10mg', '20mg', '30mg'],
+      sizesPricing: {
+        '5mg': 89.00,
+        '10mg': 169.00,
+        '20mg': 319.00,
+        '30mg': 449.00
+      },
+      description: 'Recovery compound blend',
+      fullDescription: 'This proprietary blend combines BPC-157 and TB-500 for comprehensive tissue repair and cellular regeneration research.',
+      researchApplications: [
+        'Tissue regeneration studies',
+        'Wound healing research',
+        'Cellular repair mechanisms',
+        'Angiogenesis investigation'
+      ],
+      storage: '2-8°C short term, -20°C long term',
+      form: 'Lyophilized powder',
+      solubility: 'Sterile water (1 mg/ml), bacteriostatic water',
+      stability: '24 months at -20°C',
+      mechanism: 'BPC-157 (pentadecapeptide) promotes angiogenesis via VEGF receptor pathways and modulates growth hormone receptor expression. TB-500 (thymosin beta-4 fragment) acts as actin-binding protein regulating cellular migration, upregulates matrix metalloproteinases, and promotes endothelial cell differentiation.',
+      researchFindings: 'Studies document 50-60% accelerated tissue repair in tendon/ligament injury models. Both compounds demonstrate systemic distribution following local administration, with effects observable throughout the body in research settings. Synergistic outcomes observed versus monotherapy.',
+      researchDosing: 'Typical research protocols: BPC-157 at 250-500mcg daily, TB-500 at 2-5mg weekly loading phase, 2mg weekly maintenance. Combined protocols show enhanced outcomes.'
+    },
+    {
+      id: 'TC-004',
+      name: 'L-Carnitine Injectable',
+      purity: '99.8%',
+      cas: '541-15-1',
+      molecular: 'C₇H₁₅NO₃',
+      weight: '161.20',
+      price: '$45.00',
+      priceNum: 45.00,
+      sizes: ['10ml', '20ml', '30ml', '50ml'],
+      sizesPricing: {
+        '10ml': 45.00,
+        '20ml': 79.00,
+        '30ml': 109.00,
+        '50ml': 169.00
+      },
+      description: 'High-purity injectable carnitine',
+      fullDescription: 'Pharmaceutical-grade L-Carnitine in injectable solution for research into fatty acid metabolism and mitochondrial function.',
+      researchApplications: [
+        'Fatty acid metabolism research',
+        'Mitochondrial transport studies',
+        'Energy production pathways',
+        'Cellular bioenergetics'
+      ],
+      storage: '20-25°C, protect from light',
+      form: 'Sterile solution',
+      solubility: 'Pre-dissolved in sterile water (200 mg/ml)',
+      stability: '24 months unopened',
+      mechanism: 'Essential cofactor for fatty acid transport into mitochondria via the carnitine shuttle system. Facilitates long-chain fatty acid oxidation and ATP production. Modulates acetyl-CoA/CoA ratios affecting glucose metabolism and reduces accumulation of toxic acyl metabolites.',
+      researchFindings: 'Research demonstrates enhanced fat oxidation rates, improved exercise performance markers, and increased mitochondrial efficiency in laboratory models. Studies show effects on reducing muscle damage markers and supporting recovery in research protocols.',
+      researchDosing: 'Typical research protocols: 500-2000mg daily in divided doses. Injectable forms show superior bioavailability versus oral administration in research models.'
+    },
+    {
+      id: 'TC-005',
+      name: 'GHK-Cu',
+      purity: '99.3%',
+      cas: '49557-75-7',
+      molecular: 'C₁₄H₂₂CuN₆O₄',
+      weight: '402.91',
+      price: '$65.00',
+      priceNum: 65.00,
+      sizes: ['50mg', '100mg', '200mg', '500mg'],
+      sizesPricing: {
+        '50mg': 65.00,
+        '100mg': 119.00,
+        '200mg': 219.00,
+        '500mg': 499.00
+      },
+      description: 'Copper compound complex',
+      fullDescription: 'GHK-Cu is a naturally-occurring copper complex studied in tissue remodeling and collagen synthesis research.',
+      researchApplications: [
+        'Collagen synthesis studies',
+        'Tissue remodeling research',
+        'Copper-compound interactions',
+        'Cellular differentiation pathways'
+      ],
+      storage: '2-8°C short term, -20°C long term',
+      form: 'Lyophilized powder',
+      solubility: 'Water (10 mg/ml), saline',
+      stability: '24 months at -20°C',
+      mechanism: 'Copper-binding tripeptide that modulates multiple signaling pathways. Influences transforming growth factor-beta (TGF-β) expression, stimulates collagen synthesis and glycosaminoglycan production. Acts as potent tissue remodeling signal and modulates metalloproteinase activity in extracellular matrix.',
+      researchFindings: 'Studies document enhanced collagen density, improved wound closure rates, and tissue remodeling effects in research models. Research shows influences on gene expression related to tissue repair, anti-inflammatory responses, and antioxidant enzyme activity.',
+      researchDosing: 'Typical research protocols: 1-3mg daily subcutaneous administration, or topical application at 0.5-2% concentration in research settings.'
+    },
+    {
+      id: 'TC-006',
+      name: 'CJC-1295 / Ipamorelin',
+      purity: '99.1%',
+      cas: '863288-34-0',
+      molecular: 'C₁₆₅H₂₆₉N₄₇O₄₆',
+      weight: '3647.28',
+      price: '$109.00',
+      priceNum: 109.00,
+      sizes: ['5mg', '10mg', '15mg', '30mg'],
+      sizesPricing: {
+        '5mg': 109.00,
+        '10mg': 199.00,
+        '15mg': 279.00,
+        '30mg': 519.00
+      },
+      description: 'Growth hormone secretagogue blend',
+      fullDescription: 'This research compound combination pairs CJC-1295 with Ipamorelin for studies in endocrine signaling and pituitary function.',
+      researchApplications: [
+        'Growth hormone pathway research',
+        'Pituitary function studies',
+        'Endocrine signaling mechanisms',
+        'Compound synergy investigation'
+      ],
+      storage: '2-8°C short term, -20°C long term',
+      form: 'Lyophilized powder',
+      solubility: 'Sterile water (1 mg/ml), bacteriostatic water',
+      stability: '12 months at -20°C',
+      mechanism: 'CJC-1295 is modified GHRH analog with extended half-life (6-8 days) that amplifies endogenous growth hormone pulse amplitude without suppressing natural pituitary function. Ipamorelin acts as selective ghrelin receptor agonist, stimulating GH release without affecting cortisol or prolactin levels. Synergistic activation of complementary pathways.',
+      researchFindings: 'Research documents 5-10% increases in lean mass deposition over 12-week protocols. Studies show 50-100% elevation in IGF-1 levels within physiological ranges. Research models demonstrate enhanced protein synthesis, improved bone mineral density markers, and increased collagen density.',
+      researchDosing: 'Typical research protocols: CJC-1295 at 1-2mg weekly, Ipamorelin at 100-300mcg administered 1-3x daily. Pre-sleep administration maximizes natural GH pulse synergy in research models.'
+    }
+  ];
+
+  const addToCart = (product, size) => {
+    const priceForSize = product.sizesPricing?.[size] || product.priceNum;
+    const existingItem = cart.find(item => item.id === product.id && item.size === size);
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === product.id && item.size === size
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCart([...cart, {
+        id: product.id,
+        name: product.name,
+        size: size,
+        quantity: 1,
+        price: priceForSize,
+        purity: product.purity
+      }]);
+    }
+    
+    // Show success popup
+    setAddedProduct({ ...product, selectedSize: size });
+    setShowCartPopup(true);
+  };
+
+  const removeFromCart = (id, size) => {
+    setCart(cart.filter(item => !(item.id === id && item.size === size)));
+  };
+
+  const updateQuantity = (id, size, newQuantity) => {
+    if (newQuantity === 0) {
+      removeFromCart(id, size);
+    } else {
+      setCart(cart.map(item =>
+        item.id === id && item.size === size
+          ? { ...item, quantity: newQuantity }
+          : item
+      ));
+    }
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const viewProduct = (product) => {
+    setSelectedProduct(product);
+    setSelectedSize(product.sizes[0]);
+    setCurrentPage('product');
+    window.scrollTo(0, 0);
+  };
+
+  const filteredProducts = products.filter(product => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(query) ||
+      product.id.toLowerCase().includes(query) ||
+      product.cas.includes(query) ||
+      (product.description && product.description.toLowerCase().includes(query))
+    );
+  });
+
+  // MANUFACTURING PAGE
+  if (currentPage === 'manufacturing') {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA]">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-6">
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => setCurrentPage('home')}
+                className="flex items-center space-x-3 cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-black flex items-center justify-center">
+                  <span className="text-white text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                </div>
+                <div>
+                  <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setCurrentPage('home')}
+                className="text-sm font-medium hover:text-gray-600"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Manufacturing Transparency Content */}
+        <section className="py-20 px-6 lg:px-12 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-6">
+                Manufacturing Transparency
+              </div>
+              <h1 className="text-5xl lg:text-6xl font-bold text-black mb-6">
+                Not All "U.S. Companies" Use U.S. Manufacturing
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                The research peptide industry has a transparency problem. Here's what you should know.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* The Problem */}
+              <div className="bg-gray-50 border border-gray-200 p-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900">The Industry Reality</h2>
+                <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                  <p>
+                    Many U.S.-based peptide suppliers source their compounds from overseas manufacturers, 
+                    primarily in China and India, then relabel and resell them as their own products.
+                  </p>
+                  <p>
+                    <span className="font-bold">There is no legal requirement to disclose manufacturing origin</span> for 
+                    research compounds. A company can have a U.S. address, U.S. website, and U.S. customer 
+                    service while manufacturing 100% overseas.
+                  </p>
+                  <p>
+                    The peptide industry is largely unregulated. Unlike pharmaceutical drugs, research peptides 
+                    don't require FDA approval, GMP certification, or origin disclosure.
+                  </p>
+                </div>
+              </div>
+
+              {/* Why It Matters */}
+              <div className="bg-gray-50 border border-gray-200 p-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900">Why This Matters</h2>
+                <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                  <p>
+                    <span className="font-bold">Quality Control:</span> Overseas facilities often lack the 
+                    rigorous quality standards required in U.S. pharmaceutical manufacturing. Average purity 
+                    from overseas sources: 85-92%. U.S. pharmaceutical-grade: 98%+.
+                  </p>
+                  <p>
+                    <span className="font-bold">Testing Inconsistency:</span> Many suppliers rely on manufacturer-provided 
+                    Certificates of Analysis rather than independent third-party testing. The same batch tested 
+                    by different labs can show purity variances of 5-10%.
+                  </p>
+                  <p>
+                    <span className="font-bold">Supply Chain Opacity:</span> When your supplier doesn't manufacture, 
+                    they can't control formulation, sterility, or storage conditions. You're trusting a middleman 
+                    who's trusting a factory they may have never visited.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* The Facts */}
+            <div className="bg-black text-white p-8 mb-12">
+              <h2 className="text-2xl font-bold mb-6 text-center">Industry Facts</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="text-4xl font-mono font-bold mb-2">~80%</div>
+                  <div className="text-sm text-gray-400">
+                    Estimated percentage of U.S. peptide suppliers sourcing from overseas manufacturers
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-mono font-bold mb-2">0</div>
+                  <div className="text-sm text-gray-400">
+                    Federal regulations requiring origin disclosure for research compounds
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-mono font-bold mb-2">5-10%</div>
+                  <div className="text-sm text-gray-400">
+                    Average purity variance between claimed and independently tested results
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* How to Verify */}
+            <div className="border border-gray-200 p-8 mb-12">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900">How to Verify Manufacturing Origin</h2>
+              <div className="space-y-4 text-sm text-gray-700">
+                <div className="flex items-start space-x-3">
+                  <span className="font-mono text-black font-bold text-lg">1.</span>
+                  <p>
+                    <span className="font-bold">Ask directly:</span> "Where is this compound manufactured?" 
+                    A U.S. manufacturer will answer confidently. A reseller will dodge or give vague answers.
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-mono text-black font-bold text-lg">2.</span>
+                  <p>
+                    <span className="font-bold">Request facility documentation:</span> U.S. manufacturers can 
+                    provide GMP certification, ISO accreditation, and facility inspection records. Resellers cannot.
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-mono text-black font-bold text-lg">3.</span>
+                  <p>
+                    <span className="font-bold">Examine the COA:</span> Check the testing lab location. If the COA 
+                    comes from an overseas lab, the product was likely manufactured overseas.
+                  </p>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <span className="font-mono text-black font-bold text-lg">4.</span>
+                  <p>
+                    <span className="font-bold">Compare pricing:</span> U.S. manufacturing costs more. If prices 
+                    are significantly below market average, they're likely sourcing cheaply from overseas.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* truechem's Position */}
+            <div className="bg-gray-50 border-2 border-black p-10">
+              <div className="flex items-start space-x-4">
+                <div className="w-14 h-14 bg-black flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-[11px] font-mono font-bold tracking-wider">t.c.</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold mb-4 text-gray-900">Our Commitment</h2>
+                  <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                    <p>
+                      truechem compounds are manufactured in ISO-certified U.S. facilities under pharmaceutical-grade 
+                      standards. We don't outsource, relabel, or resell imported products.
+                    </p>
+                    <p>
+                      Every batch undergoes independent third-party HPLC testing by U.S.-based laboratories. 
+                      We provide the complete Certificate of Analysis—not a manufacturer's summary—with every order.
+                    </p>
+                    <p>
+                      We charge more because U.S. manufacturing costs more. But you're paying for verifiable 
+                      quality, transparent supply chains, and compounds that actually match their labels.
+                    </p>
+                    <div className="pt-4 border-t border-gray-300 mt-6">
+                      <p className="font-mono text-xs text-gray-600">
+                        Manufacturing facility documentation available upon request.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="mt-12 text-center">
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="px-8 py-4 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all inline-block"
+              >
+                View Products
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+          <div className="max-w-[1400px] mx-auto text-center">
+            <div className="text-sm text-gray-400">
+              © 2024 truechem. Research use only.
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // CART PAGE
+  if (currentPage === 'cart') {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA]">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="flex items-center justify-between h-20">
+              <button onClick={() => setCurrentPage('home')} className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-black flex items-center justify-center">
+                  <span className="text-white text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                </div>
+                <div>
+                  <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+                </div>
+              </button>
+              <button 
+                onClick={() => setCurrentPage('home')}
+                className="text-sm font-medium text-gray-900 hover:text-gray-600"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <section className="pt-32 pb-16 px-6 lg:px-12">
+          <div className="max-w-[1200px] mx-auto">
+            <h1 className="text-4xl font-bold mb-4">Shopping Cart</h1>
+            <p className="text-gray-600 mb-12">Review your order</p>
+
+            {cart.length === 0 ? (
+              <div className="bg-white p-12 text-center border">
+                <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-xl font-bold mb-2">Your cart is empty</h3>
+                <button 
+                  onClick={() => setCurrentPage('home')}
+                  className="mt-4 px-8 py-3 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
+                >
+                  Browse Products
+                </button>
+              </div>
+            ) : (
+              <div className="grid lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-4">
+                  {cart.map((item) => (
+                    <div key={`${item.id}-${item.size}`} className="bg-white border p-6">
+                      <div className="flex gap-6">
+                        <div className="w-24 h-24 bg-gray-100 border flex items-center justify-center">
+                          <Beaker size={32} className="text-gray-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between mb-3">
+                            <div>
+                              <div className="text-xs font-mono text-gray-400">{item.id}</div>
+                              <h3 className="text-xl font-bold">{item.name}</h3>
+                              <div className="text-sm font-mono text-gray-500">
+                                {item.size} • {item.purity}
+                              </div>
+                            </div>
+                            <button onClick={() => removeFromCart(item.id, item.size)}>
+                              <X size={20} />
+                            </button>
+                          </div>
+                          <div className="flex justify-between">
+                            <div className="flex items-center space-x-2">
+                              <button 
+                                onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
+                                className="w-8 h-8 border hover:bg-black hover:text-white"
+                              >
+                                -
+                              </button>
+                              <span className="w-12 text-center font-mono">{item.quantity}</span>
+                              <button 
+                                onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
+                                className="w-8 h-8 border hover:bg-black hover:text-white"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="text-2xl font-mono font-bold">
+                              ${(item.price * item.quantity).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="lg:col-span-1">
+                  <div className="bg-white border p-6 sticky top-24">
+                    <h3 className="text-lg font-bold mb-6">Order Summary</h3>
+                    <div className="space-y-3 mb-6 pb-6 border-b">
+                      <div className="flex justify-between">
+                        <span>Subtotal ({cartItemCount} items)</span>
+                        <span className="font-mono">${cartTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between mb-6">
+                      <span className="font-mono uppercase text-sm">Total</span>
+                      <span className="text-3xl font-mono font-bold">${cartTotal.toFixed(2)}</span>
+                    </div>
+                    <button className="w-full py-4 bg-black text-white mb-3 hover:bg-gray-800 font-mono text-sm transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
+                      <svg width="42" height="18" viewBox="0 0 42 18" fill="none" className="inline mr-2">
+                        <path d="M7.4 0.9c-0.4 0.5-1 0.8-1.7 0.8-0.1 0-0.1-0.1-0.1-0.1 0-0.5 0.2-1 0.5-1.4 0.4-0.5 1-0.9 1.6-0.9 0.1 0 0.1 0.1 0.1 0.1 0 0.5-0.2 0.9-0.4 1.5zM7.5 2c-0.9 0-1.6 0.5-2 0.5-0.5 0-1.2-0.5-2-0.5-1 0-2 0.6-2.5 1.5-1.1 1.8-0.3 4.5 0.8 6 0.5 0.7 1.1 1.5 2 1.5 0.8 0 1.1-0.5 2-0.5 0.9 0 1.1 0.5 2 0.5 0.8 0 1.4-0.8 1.9-1.5 0.6-0.8 0.8-1.6 0.8-1.6 0 0-1.6-0.6-1.6-2.4 0-1.5 1.2-2.2 1.3-2.3-0.7-1-1.8-1.2-2.2-1.2z" fill="currentColor"/>
+                      </svg>
+                      Pay
+                    </button>
+                    <button className="w-full py-4 border-2 border-black font-mono text-sm hover:bg-black hover:text-white transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+                      Checkout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Company */}
+              <div>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-white flex items-center justify-center">
+                    <span className="text-black text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
+                      <span className="font-bold">true</span>
+                      <span className="font-normal">chem</span>
+                    </div>
+                    <div className="text-[9px] font-mono tracking-[0.15em] text-gray-400 uppercase">99%+ Certified</div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+                </p>
+              </div>
+
+              {/* Products */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Growth Factors</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Custom Synthesis</a></li>
+                </ul>
+              </div>
+
+              {/* Resources */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Resources</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Certificates of Analysis</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Testing Methodology</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Safety Data Sheets</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Research Library</a></li>
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Company</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Quality Assurance</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Terms of Service</a></li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="pt-8 border-t border-gray-800">
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="text-xs font-mono text-gray-500">
+                  © 2024 truechem. All rights reserved.
+                </div>
+                <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
+                  <span>ISO 9001:2015 CERTIFIED</span>
+                  <span>•</span>
+                  <span>THIRD-PARTY TESTED</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // PRODUCT PAGE  
+  if (currentPage === 'product' && selectedProduct) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA]">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+            <div className="flex items-center justify-between h-20">
+              <button onClick={() => setCurrentPage('home')} className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-black flex items-center justify-center">
+                  <span className="text-white text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                </div>
+                <div>
+                  <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+                </div>
+              </button>
+              <div className="flex items-center space-x-6">
+                <button 
+                  onClick={() => setCurrentPage('home')}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  ← Back to Products
+                </button>
+                <button 
+                  onClick={() => setCurrentPage('cart')}
+                  className="p-2 hover:bg-gray-100 rounded-lg relative"
+                >
+                  <ShoppingCart size={20} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute top-1 right-1 w-5 h-5 bg-black text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section className="pt-32 pb-16 px-6 lg:px-12">
+          <div className="max-w-[1200px] mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 mb-16">
+              <div className="bg-white border p-12 flex items-center justify-center aspect-square">
+                <Beaker size={120} className="text-gray-300" />
+              </div>
+
+              <div>
+                <div className="text-xs font-mono text-gray-400 mb-3">{selectedProduct.id}</div>
+                {selectedProduct.badge && (
+                  <div className="inline-block px-3 py-1 bg-black text-white text-[9px] font-mono uppercase mb-4">
+                    {selectedProduct.badge}
+                  </div>
+                )}
+                <h1 className="text-5xl font-bold mb-4">{selectedProduct.name}</h1>
+                <p className="text-lg text-gray-600 mb-8">{selectedProduct.fullDescription}</p>
+
+                <div className="inline-flex items-center space-x-4 mb-8">
+                  <div className="px-4 py-2 bg-black text-white text-sm font-mono font-bold">
+                    PURITY: {selectedProduct.purity}
+                  </div>
+                </div>
+
+                <div className="border bg-white p-6 mb-8">
+                  <div className="text-xs font-mono text-gray-400 uppercase mb-4">Technical Specifications</div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm font-mono">
+                      <span className="text-gray-600">CAS Number</span>
+                      <span>{selectedProduct.cas}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-mono">
+                      <span className="text-gray-600">Molecular Formula</span>
+                      <span>{selectedProduct.molecular}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-mono">
+                      <span className="text-gray-600">Molecular Weight</span>
+                      <span>{selectedProduct.weight} g/mol</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-mono">
+                      <span className="text-gray-600">Form</span>
+                      <span>{selectedProduct.form}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-mono">
+                      <span className="text-gray-600">Storage</span>
+                      <span>{selectedProduct.storage}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-xs font-mono text-gray-400 uppercase mb-3">Select Size</div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {selectedProduct.sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`py-3 px-4 border-2 font-mono text-sm ${
+                          selectedSize === size
+                            ? 'border-black bg-black text-white'
+                            : 'border-gray-300 hover:border-black'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-4xl font-mono font-bold mb-8">
+                  ${selectedProduct.sizesPricing?.[selectedSize] || selectedProduct.priceNum}
+                </div>
+
+                <button
+                  onClick={() => {
+                    addToCart(selectedProduct, selectedSize);
+                  }}
+                  className="w-full py-4 bg-black text-white font-mono text-sm hover:bg-gray-800 mb-3 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
+                >
+                  Add to Cart — ${selectedProduct.sizesPricing?.[selectedSize] || selectedProduct.priceNum}
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage('cart')}
+                  className="w-full py-4 border-2 border-gray-300 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]"
+                >
+                  View Cart
+                </button>
+              </div>
+            </div>
+
+            {/* Mechanism of Action */}
+            {selectedProduct.mechanism && (
+              <div className="bg-white border p-8 mb-8">
+                <h2 className="text-2xl font-bold mb-4">Mechanism of Action</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  {selectedProduct.mechanism}
+                </p>
+              </div>
+            )}
+
+            {/* Research Findings */}
+            {selectedProduct.researchFindings && (
+              <div className="bg-white border p-8 mb-8">
+                <h2 className="text-2xl font-bold mb-4">Published Research</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  {selectedProduct.researchFindings}
+                </p>
+              </div>
+            )}
+
+            <div className="bg-white border p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-6">Research Applications</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {selectedProduct.researchApplications.map((app, idx) => (
+                  <div key={idx} className="flex items-start space-x-3">
+                    <CheckCircle size={20} className="mt-0.5" />
+                    <span>{app}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white border p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-3">Certificate of Analysis</h2>
+              <p className="text-gray-600 mb-6">
+                Third-party tested and verified. View comprehensive purity analysis.
+              </p>
+              <button className="px-6 py-3 border-2 border-black font-mono text-sm hover:bg-black hover:text-white transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+                Download COA (PDF)
+              </button>
+            </div>
+
+            <div className="bg-black text-white p-8">
+              <div className="flex items-start space-x-4">
+                <Shield size={32} className="flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-xl font-bold mb-3">Research Use Only</h3>
+                  <p className="text-gray-300 mb-4">
+                    This product is intended for laboratory research purposes only. NOT FOR HUMAN CONSUMPTION.
+                  </p>
+                  <ul className="space-y-2 text-sm text-gray-300">
+                    <li>• You are a qualified research professional</li>
+                    <li>• This product will be used solely for in-vitro research</li>
+                    <li>• This product has not been evaluated for safety in humans</li>
+                    <li>• You comply with all applicable regulations</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Company */}
+              <div>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-white flex items-center justify-center">
+                    <span className="text-black text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
+                      <span className="font-bold">true</span>
+                      <span className="font-normal">chem</span>
+                    </div>
+                    <div className="text-[9px] font-mono tracking-[0.15em] text-gray-400 uppercase">99%+ Certified</div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+                </p>
+              </div>
+
+              {/* Products */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Growth Factors</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Custom Synthesis</a></li>
+                </ul>
+              </div>
+
+              {/* Resources */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Resources</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Certificates of Analysis</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Testing Methodology</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Safety Data Sheets</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Research Library</a></li>
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Company</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Quality Assurance</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Terms of Service</a></li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="pt-8 border-t border-gray-800">
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="text-xs font-mono text-gray-500">
+                  © 2024 truechem. All rights reserved.
+                </div>
+                <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
+                  <span>ISO 9001:2015 CERTIFIED</span>
+                  <span>•</span>
+                  <span>THIRD-PARTY TESTED</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // HOME PAGE
+  return (
+    <div className="min-h-screen bg-[#FAFAFA]">
+      {/* Age Verification Modal */}
+      {!ageVerified && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-6">
+          <div className="bg-white max-w-md w-full p-8 shadow-2xl">
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-black mx-auto flex items-center justify-center mb-4">
+                <span className="text-white text-lg font-mono font-bold tracking-wider">t.c.</span>
+              </div>
+              <div className="text-3xl font-mono text-black lowercase mb-2" style={{ letterSpacing: '0.08em' }}>
+                <span className="font-bold">true</span>
+                <span className="font-normal">chem</span>
+              </div>
+              <div className="text-[10px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+            </div>
+
+            <div className="border-t border-b border-gray-200 py-6 mb-6">
+              <h2 className="text-2xl font-bold text-black mb-4 text-center">Age Verification</h2>
+              <p className="text-sm text-gray-600 text-center leading-relaxed">
+                You must be 21 years or older to access this site. Our products are intended for 
+                laboratory research purposes only.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setAgeVerified(true)}
+                className="w-full py-4 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
+              >
+                I am 21+ and understand
+              </button>
+              <button
+                onClick={() => window.location.href = 'https://google.com'}
+                className="w-full py-4 border-2 border-gray-300 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]"
+              >
+                Exit
+              </button>
+            </div>
+
+            <p className="text-[10px] font-mono text-gray-400 text-center mt-6 leading-relaxed">
+              By entering this site, you confirm you are purchasing for research purposes only and comply with all applicable regulations.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Success Popup */}
+      {showCartPopup && addedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 z-[90] flex items-center justify-center p-6">
+          <div className="bg-white max-w-lg w-full shadow-xl border border-gray-200 animate-fadeInUp">
+            {/* Success Header - Softer */}
+            <div className="bg-gray-50 border-b border-gray-200 p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
+                  <CheckCircle size={18} className="text-green-600" />
+                </div>
+                <div>
+                  <div className="font-bold text-sm">Added to cart</div>
+                  <div className="text-xs text-gray-500 font-mono">
+                    {addedProduct.name} · {addedProduct.selectedSize}
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowCartPopup(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Recommendations - Compact */}
+            <div className="p-5">
+              <h3 className="text-sm font-bold text-gray-900 mb-3">You may also need</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {products
+                  .filter(p => p.id !== addedProduct.id)
+                  .slice(0, 2)
+                  .map(product => (
+                    <div key={product.id} className="border border-gray-200 p-3 hover:border-gray-400 transition-all bg-gray-50">
+                      <h4 className="font-bold text-xs mb-1 text-gray-900">{product.name}</h4>
+                      <div className="text-[10px] font-mono text-gray-500 mb-2">{product.purity}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-mono font-bold text-gray-900">{product.price}</div>
+                        <button
+                          onClick={() => {
+                            addToCart(product, product.sizes[0]);
+                          }}
+                          className="px-3 py-1 bg-white border border-gray-300 text-gray-700 font-mono text-[10px] hover:border-gray-900 hover:text-gray-900 transition-all"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Action Buttons - Checkout Emphasized */}
+            <div className="p-5 pt-0 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCartPopup(false);
+                  setCurrentPage('cart');
+                }}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 font-mono text-sm hover:border-gray-900 hover:text-gray-900 transition-all"
+              >
+                View Cart
+              </button>
+              <button
+                onClick={() => {
+                  setShowCartPopup(false);
+                  setCurrentPage('cart');
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-gray-900 to-black text-white font-mono text-sm hover:shadow-lg transform hover:scale-[1.02] transition-all relative overflow-hidden group"
+              >
+                <span className="relative z-10">Checkout ({cartItemCount})</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-black to-gray-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all ${scrolled ? 'bg-white shadow-sm' : 'bg-transparent'}`}>
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-black flex items-center justify-center">
+                <span className="text-white text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+              </div>
+              <div>
+                <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                  <span className="font-bold">true</span>
+                  <span className="font-normal">chem</span>
+                </div>
+                <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+              </div>
+            </div>
+
+            <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+              <a href="#products" className="text-sm font-medium hover:text-gray-600">Products</a>
+              <button 
+                onClick={() => setCurrentPage('manufacturing')}
+                className="text-sm font-medium hover:text-gray-600"
+              >
+                Actually Made in U.S.?
+              </button>
+              <a href="#why-truechem" className="text-sm font-medium hover:text-gray-600">Why Truechem</a>
+              <a href="#purity" className="text-sm font-medium hover:text-gray-600">Purity</a>
+            </nav>
+
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setCurrentPage('cart')}
+                className="p-2 hover:bg-gray-100 rounded-lg relative"
+              >
+                <ShoppingCart size={20} />
+                {cartItemCount > 0 && (
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-black text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section className="pt-32 pb-16 px-6 lg:px-12">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-8">
+            ISO 9001:2015 Certified
+          </div>
+          
+          <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-[0.95]">Purer Than<br/>Research Grade<br/>Compounds</h1>
+          
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+            Precision compounds for scientific research. Third-party tested. 
+            Certificate of Analysis provided with every order. Actually U.S. made.
+          </p>
+
+          <div className="flex items-center space-x-4 mb-12">
+            <a href="#products" className="px-8 py-4 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
+              View Products
+            </a>
+            <button className="px-8 py-4 border border-gray-300 text-gray-900 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
+              View COAs
+            </button>
+          </div>
+
+          <div className="border-t border-gray-200 pt-8">
+            <div className="grid grid-cols-3 gap-6 max-w-lg">
+              <div>
+                <div className="text-2xl font-mono font-bold text-black mb-1">98.5%</div>
+                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Min. Purity</div>
+              </div>
+              <div>
+                <div className="text-2xl font-mono font-bold text-black mb-1">24HR</div>
+                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Shipping</div>
+              </div>
+              <div>
+                <div className="text-2xl font-mono font-bold text-black mb-1">100%</div>
+                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Verified</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Animated Purity Meter Section */}
+      <section className="py-20 px-6 lg:px-12 bg-white">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-6">
+              Third-Party Verified
+            </div>
+            
+            <h2 className="text-4xl lg:text-5xl font-bold text-black mb-4">
+              Average Purity Across All Batches
+            </h2>
+            
+            <p className="text-lg text-gray-600 mb-12">
+              Every batch tested by independent laboratories using HPLC and mass spectrometry
+            </p>
+
+            {/* Purity Meter */}
+            <div className="bg-gray-50 border border-gray-200 p-12 mb-8">
+              <div className="text-8xl lg:text-9xl font-mono font-bold text-black mb-8 tabular-nums">
+                {purityValue.toFixed(1)}%
+              </div>
+              
+              <div className="relative h-4 bg-gray-200 overflow-hidden mb-6">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-black will-change-transform"
+                  style={{ 
+                    width: `${purityValue}%`
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-between text-xs font-mono text-gray-500">
+                <span>90.0%</span>
+                <span>95.0%</span>
+                <span>100.0%</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-mono font-bold text-black mb-2">847</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Batches Tested</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-mono font-bold text-black mb-2">100%</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Third-Party Verified</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-mono font-bold text-black mb-2">Q4 2024</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Current Quarter</div>
+              </div>
+            </div>
+
+            {/* Industry Standards Comparison */}
+            <div className="mt-16 pt-12 border-t border-gray-200">
+              <h3 className="text-2xl font-bold text-black mb-8 text-center">Industry Standards</h3>
+              
+              <div className="space-y-6 max-w-2xl mx-auto">
+                {/* truechem */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-6 h-6 bg-black flex items-center justify-center">
+                        <span className="text-white text-[8px] font-mono font-bold tracking-wide">t.c.</span>
+                      </div>
+                      <span className="font-bold text-sm">truechem</span>
+                      <span className="text-xs font-mono text-gray-500">(ISO-Certified, COA Verified)</span>
+                    </div>
+                    <span className="text-lg font-mono font-bold">99.2%</span>
+                  </div>
+                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                    <div 
+                      className="h-full bg-black transition-all duration-300"
+                      style={{ width: '99.2%' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Research Grade Standard */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-600">Research Grade Standard</span>
+                      <span className="text-xs font-mono text-gray-400">(Industry Minimum)</span>
+                    </div>
+                    <span className="text-lg font-mono font-bold text-gray-600">95.0%</span>
+                  </div>
+                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                    <div 
+                      className="h-full bg-gray-400 transition-all duration-300"
+                      style={{ width: '95.0%' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Chinese Manufacturing */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-600">Chinese Manufacturing</span>
+                      <span className="text-xs font-mono text-gray-400">(Typical Range)</span>
+                    </div>
+                    <span className="text-lg font-mono font-bold text-gray-600">85-92%</span>
+                  </div>
+                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                    <div 
+                      className="h-full bg-gray-300 transition-all duration-300"
+                      style={{ width: '88.5%' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Underground Labs */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-gray-600">Underground Labs</span>
+                      <span className="text-xs font-mono text-gray-400">(Unverified)</span>
+                    </div>
+                    <span className="text-lg font-mono font-bold text-gray-600">70-85%</span>
+                  </div>
+                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                    <div 
+                      className="h-full bg-gray-300 transition-all duration-300"
+                      style={{ width: '77.5%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 max-w-2xl mx-auto bg-gray-50 border border-gray-200 p-6">
+                <p className="text-sm text-gray-700 text-center leading-relaxed">
+                  <span className="font-bold">Research Grade</span> classification requires only <span className="font-mono font-bold">95% minimum purity</span>. 
+                  Many suppliers source from overseas manufacturers with inconsistent quality control. 
+                  Our compounds average <span className="font-mono font-bold">99.2%</span> — exceeding research grade standards with US-based manufacturing and independent third-party verification.
+                </p>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center mt-6 font-mono">
+                *Industry ranges based on publicly available testing data and supplier specifications
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why truechem Section */}
+      <section id="why-truechem" className="py-20 px-6 lg:px-12 bg-[#FAFAFA]">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-black mb-6">
+              Why <span className="font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                <span className="font-bold">true</span>
+                <span className="font-normal">chem</span>
+              </span>?
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We're not just another compound supplier. We're researchers who got tired of inconsistent quality.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Reason 1 */}
+            <div className="bg-white border border-gray-200 p-8 text-center">
+              <div className="w-16 h-16 bg-black mx-auto mb-6 flex items-center justify-center">
+                <Shield size={32} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-black mb-4">US-Based Manufacturing</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                Unlike most suppliers who import from overseas, we manufacture domestically under strict ISO 9001:2015 certification with rigorous quality controls.
+              </p>
+              <div className="text-sm font-mono text-gray-500">
+                <CheckCircle size={16} className="inline mr-2" />
+                Zero customs delays
+              </div>
+            </div>
+
+            {/* Reason 2 */}
+            <div className="bg-white border border-gray-200 p-8 text-center">
+              <div className="w-16 h-16 bg-black mx-auto mb-6 flex items-center justify-center">
+                <Award size={32} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-black mb-4">Every Batch Tested</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                We don't trust manufacturer COAs. Every single batch gets independent third-party HPLC and mass spectrometry analysis.
+              </p>
+              <div className="text-sm font-mono text-gray-500">
+                <CheckCircle size={16} className="inline mr-2" />
+                100% verification rate
+              </div>
+            </div>
+
+            {/* Reason 3 */}
+            <div className="bg-white border border-gray-200 p-8 text-center">
+              <div className="w-16 h-16 bg-black mx-auto mb-6 flex items-center justify-center">
+                <Beaker size={32} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-black mb-4">Research-First Approach</h3>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                We're chemists, not salespeople. We understand what researchers need: consistency, documentation, and purity you can trust.
+              </p>
+              <div className="text-sm font-mono text-gray-500">
+                <CheckCircle size={16} className="inline mr-2" />
+                Made by researchers
+              </div>
+            </div>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="mt-16 pt-12 border-t border-gray-200 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-mono font-bold text-black mb-2">5,000+</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Orders Shipped</div>
+              </div>
+              <div>
+                <div className="text-3xl font-mono font-bold text-black mb-2">24HR</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Average Delivery</div>
+              </div>
+              <div>
+                <div className="text-3xl font-mono font-bold text-black mb-2">99.2%</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Avg Purity</div>
+              </div>
+              <div>
+                <div className="text-3xl font-mono font-bold text-black mb-2">4.9★</div>
+                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Customer Rating</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Industry Comparison */}
+          <div className="mt-12 bg-black text-white p-8 max-w-3xl mx-auto">
+            <div className="text-center">
+              <div className="text-xs font-mono text-gray-400 uppercase mb-6 tracking-wider">
+                Industry Standard vs. truechem
+              </div>
+              <div className="grid grid-cols-2 gap-8 mb-6">
+                <div className="border-r border-gray-700 pr-8">
+                  <div className="text-sm text-gray-400 mb-2">Research Grade</div>
+                  <div className="text-4xl font-mono font-bold">95.0%</div>
+                  <div className="text-xs text-gray-500 mt-2">Minimum Required</div>
+                </div>
+                <div className="pl-8">
+                  <div className="text-sm text-gray-400 mb-2">truechem Average</div>
+                  <div className="text-4xl font-mono font-bold text-green-400">99.2%</div>
+                  <div className="text-xs text-gray-500 mt-2">Verified by COA</div>
+                </div>
+              </div>
+              <div className="pt-6 border-t border-gray-800">
+                <p className="text-sm text-gray-400">
+                  Every batch independently tested. No exceptions.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" className="py-16 px-6 lg:px-12">
+        <div className="max-w-[1400px] mx-auto">
+          <h2 className="text-3xl font-bold mb-12">Products</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <div 
+                key={product.id}
+                onClick={() => viewProduct(product)}
+                className="bg-white border hover:border-black cursor-pointer p-6 transition-all"
+              >
+                <div className="text-xs font-mono text-gray-400 mb-2">{product.id}</div>
+                {product.badge && (
+                  <div className="inline-block px-2 py-1 bg-black text-white text-[9px] font-mono uppercase mb-3">
+                    {product.badge}
+                  </div>
+                )}
+                <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
+                <div className="font-mono text-sm text-gray-500 mb-4">{product.molecular}</div>
+                <div className="inline-block px-3 py-1 bg-black text-white text-xs font-mono mb-4">
+                  {product.purity}
+                </div>
+                <div className="text-2xl font-mono font-bold mb-4">{product.price}</div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(product, product.sizes[0]);
+                  }}
+                  className="w-full py-3 bg-black text-white font-mono text-sm hover:bg-gray-800 mb-2 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
+                >
+                  Add to Cart
+                </button>
+                <button className="w-full py-3 border border-gray-300 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
+                  View Details
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            {/* Company */}
+            <div>
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-white flex items-center justify-center">
+                  <span className="text-black text-[10px] font-mono font-bold tracking-wider">t.c.</span>
+                </div>
+                <div>
+                  <div className="text-2xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-400 uppercase">99%+ Certified</div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+              </p>
+            </div>
+
+            {/* Products */}
+            <div>
+              <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Growth Factors</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Custom Synthesis</a></li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Resources</div>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Certificates of Analysis</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Testing Methodology</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Safety Data Sheets</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Research Library</a></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Company</div>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Quality Assurance</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Terms of Service</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-gray-800">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="text-xs font-mono text-gray-500">
+                © 2024 truechem. All rights reserved.
+              </div>
+              <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
+                <span>ISO 9001:2015 CERTIFIED</span>
+                <span>•</span>
+                <span>THIRD-PARTY TESTED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
