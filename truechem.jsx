@@ -352,8 +352,8 @@ export default function TruchemWebsite() {
                 onClick={() => setCurrentPage('home')}
                 className="flex items-center space-x-3 cursor-pointer"
               >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <VialIcon inverted={true} size={38} />
+                <div className="w-10 h-10 bg-black flex items-center justify-center">
+                  <VialIcon inverted={false} size={38} />
                 </div>
                 <div>
                   <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
@@ -364,12 +364,47 @@ export default function TruchemWebsite() {
                 </div>
               </button>
               
-              <button 
-                onClick={() => setCurrentPage('home')}
-                className="text-sm font-medium hover:text-gray-600"
-              >
-                ← Back to Home
-              </button>
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+                <button 
+                  onClick={() => { setCurrentPage('home'); setTimeout(() => { document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Products
+                </button>
+                <button 
+                  onClick={() => setCurrentPage('manufacturing')}
+                  className="text-sm font-medium text-black"
+                >
+                  Actually U.S. made?
+                </button>
+                <button 
+                  onClick={() => { setCurrentPage('home'); setTimeout(() => { document.getElementById('why-truechem')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Why Truechem
+                </button>
+                <button 
+                  onClick={() => { setCurrentPage('home'); setTimeout(() => { document.getElementById('purity')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Purity
+                </button>
+              </nav>
+
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={() => setCurrentPage('cart')}
+                  className="p-2 hover:bg-gray-100 rounded-lg relative"
+                >
+                  <ShoppingCart size={20} />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-mono">
+                      {cart.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -1151,7 +1186,7 @@ export default function TruchemWebsite() {
                 onClick={() => setCurrentPage('manufacturing')}
                 className="text-sm font-medium hover:text-gray-600"
               >
-                Actually Made in U.S.?
+                Actually U.S. made?
               </button>
               <a href="#why-truechem" className="text-sm font-medium hover:text-gray-600">Why Truechem</a>
               <a href="#purity" className="text-sm font-medium hover:text-gray-600">Purity</a>
@@ -1184,7 +1219,7 @@ export default function TruchemWebsite() {
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl">
             Precision compounds for scientific research. Third-party tested. 
-            Certificate of Analysis provided with every order. Actually U.S. made.
+            Certificate of Analysis provided with every order. <em>Actually</em> U.S. made.
           </p>
 
           <div className="flex items-center space-x-4 mb-12">
