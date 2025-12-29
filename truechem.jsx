@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker } from 'lucide-react';
 
-// Vial Logo Component - Using PNG file from public folder
+// Vial Logo Component - Always white outline (no inversion)
 const VialIcon = ({ inverted = false, size = 40 }) => {
   return (
     <img 
@@ -10,8 +10,7 @@ const VialIcon = ({ inverted = false, size = 40 }) => {
       width={size} 
       height={size} 
       style={{ 
-        display: 'block',
-        filter: inverted ? 'invert(1)' : 'none'
+        display: 'block'
       }}
     />
   );
