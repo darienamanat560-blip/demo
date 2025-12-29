@@ -1,34 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker } from 'lucide-react';
 
-// Vial Logo Component
+// Vial Logo Component - Using PNG file from public folder
 const VialIcon = ({ inverted = false, size = 40 }) => {
-  const color = inverted ? "#000000" : "#FFFFFF";
-  const liquidColor = inverted ? "#CCCCCC" : "#E5E5E5";
-  
   return (
-    <svg 
+    <img 
+      src="/vial-logo.png" 
+      alt="truechem" 
       width={size} 
       height={size} 
-      viewBox="0 0 100 150" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block' }}
-    >
-      <rect x="35" y="10" width="30" height="8" fill={color} />
-      <path d="M 38 18 L 40 28 L 60 28 L 62 18 Z" fill={color} />
-      <rect 
-        x="28" 
-        y="28" 
-        width="44" 
-        height="110" 
-        rx="6" 
-        fill="none" 
-        stroke={color} 
-        strokeWidth="5"
-      />
-      <rect x="33" y="90" width="34" height="43" rx="3" fill={liquidColor} />
-    </svg>
+      style={{ 
+        display: 'block',
+        filter: inverted ? 'invert(1)' : 'none'
+      }}
+    />
   );
 };
 
@@ -368,7 +353,7 @@ export default function TruchemWebsite() {
                 className="flex items-center space-x-3 cursor-pointer"
               >
                 <div className="w-10 h-10 flex items-center justify-center">
-                  <VialIcon size={40} />
+                  <VialIcon inverted={true} size={40} />
                 </div>
                 <div>
                   <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
@@ -570,7 +555,7 @@ export default function TruchemWebsite() {
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
             <div className="flex items-center justify-between h-20">
               <button onClick={() => setCurrentPage('home')} className="flex items-center space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center"><VialIcon size={40} /></div>
+                <div className="w-10 h-10 flex items-center justify-center"><VialIcon inverted={true} size={40} /></div>
                 <div>
                   <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
                     <span className="font-bold">true</span>
@@ -764,7 +749,7 @@ export default function TruchemWebsite() {
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
             <div className="flex items-center justify-between h-20">
               <button onClick={() => setCurrentPage('home')} className="flex items-center space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center"><VialIcon size={40} /></div>
+                <div className="w-10 h-10 flex items-center justify-center"><VialIcon inverted={true} size={40} /></div>
                 <div>
                   <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
                     <span className="font-bold">true</span>
@@ -1030,7 +1015,7 @@ export default function TruchemWebsite() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-6">
           <div className="bg-white max-w-md w-full p-8 shadow-2xl">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 mx-auto flex items-center justify-center mb-4"><VialIcon size={40} /></div>
+              <div className="w-16 h-16 mx-auto flex items-center justify-center mb-4"><VialIcon inverted={true} size={60} /></div>
               <div className="text-3xl font-mono text-black lowercase mb-2" style={{ letterSpacing: '0.08em' }}>
                 <span className="font-bold">true</span>
                 <span className="font-normal">chem</span>
@@ -1150,7 +1135,7 @@ export default function TruchemWebsite() {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center"><VialIcon size={40} /></div>
+              <div className="w-10 h-10 flex items-center justify-center"><VialIcon inverted={true} size={40} /></div>
               <div>
                 <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
                   <span className="font-bold">true</span>
