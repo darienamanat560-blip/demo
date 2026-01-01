@@ -1054,7 +1054,7 @@ export default function TruchemWebsite() {
   // CART PAGE
   if (currentPage === 'cart') {
     return (
-      <div className="min-h-screen bg-black flex flex-col">
+      <div className="min-h-screen flex flex-col bg-[#FAFAFA]">
         <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
             <div className="flex items-center justify-between h-20">
@@ -1078,7 +1078,7 @@ export default function TruchemWebsite() {
           </div>
         </header>
 
-        <section className="flex-1 pt-32 pb-16 px-6 lg:px-12 bg-[#FAFAFA]">
+        <section className="flex-1 pt-32 pb-16 px-6 lg:px-12">
           <div className="max-w-[1200px] mx-auto">
             <h1 className="text-4xl font-bold mb-4">Shopping Cart</h1>
             <p className="text-gray-600 mb-12">Review your order</p>
@@ -1172,7 +1172,7 @@ export default function TruchemWebsite() {
         </section>
 
         {/* Footer */}
-        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+        <footer className="mt-auto py-16 px-6 lg:px-12 bg-black text-white">
           <div className="max-w-[1400px] mx-auto">
             <div className="grid md:grid-cols-4 gap-12 mb-12">
               {/* Company */}
