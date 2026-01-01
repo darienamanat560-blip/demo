@@ -1078,61 +1078,61 @@ export default function TruchemWebsite() {
           </div>
         </header>
 
-        <section className="flex-1 pt-32 pb-16 px-6 lg:px-12">
+        <section className="flex-1 pt-24 sm:pt-32 pb-8 sm:pb-16 px-4 sm:px-6 lg:px-12">
           <div className="max-w-[1200px] mx-auto">
-            <h1 className="text-4xl font-bold mb-4">Shopping Cart</h1>
-            <p className="text-gray-600 mb-12">Review your order</p>
+            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-4">Shopping Cart</h1>
+            <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-12">Review your order</p>
 
             {cart.length === 0 ? (
-              <div className="bg-white p-12 text-center border">
-                <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-bold mb-2">Your cart is empty</h3>
+              <div className="bg-white p-8 sm:p-12 text-center border">
+                <ShoppingCart size={36} className="mx-auto mb-3 text-gray-300 sm:w-12 sm:h-12" />
+                <h3 className="text-lg sm:text-xl font-bold mb-2">Your cart is empty</h3>
                 <button 
                   onClick={() => setCurrentPage('home')}
-                  className="mt-4 px-8 py-3 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
+                  className="mt-3 px-6 py-2.5 sm:mt-4 sm:px-8 sm:py-3 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]"
                 >
                   Browse Products
                 </button>
               </div>
             ) : (
-              <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-4">
+              <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
+                <div className="lg:col-span-2 space-y-3 sm:space-y-4">
                   {cart.map((item) => (
-                    <div key={`${item.id}-${item.size}`} className="bg-white border p-6">
-                      <div className="flex gap-6">
-                        <div className="w-24 h-24 bg-gray-100 border flex items-center justify-center">
-                          <Beaker size={32} className="text-gray-400" />
+                    <div key={`${item.id}-${item.size}`} className="bg-white border p-3 sm:p-6">
+                      <div className="flex gap-3 sm:gap-6">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 border flex items-center justify-center flex-shrink-0">
+                          <Beaker size={24} className="text-gray-400 sm:w-8 sm:h-8" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between mb-3">
-                            <div>
-                              <div className="text-xs font-mono text-gray-400">{item.id}</div>
-                              <h3 className="text-xl font-bold">{item.name}</h3>
-                              <div className="text-sm font-mono text-gray-500">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-2 sm:mb-3">
+                            <div className="min-w-0">
+                              <div className="text-[10px] sm:text-xs font-mono text-gray-400">{item.id}</div>
+                              <h3 className="text-base sm:text-xl font-bold truncate">{item.name}</h3>
+                              <div className="text-xs sm:text-sm font-mono text-gray-500">
                                 {item.size} • {item.purity}
                               </div>
                             </div>
-                            <button onClick={() => removeFromCart(item.id, item.size)}>
-                              <X size={20} />
+                            <button onClick={() => removeFromCart(item.id, item.size)} className="p-1 -mr-1">
+                              <X size={18} className="sm:w-5 sm:h-5" />
                             </button>
                           </div>
-                          <div className="flex justify-between">
-                            <div className="flex items-center space-x-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-1 sm:space-x-2">
                               <button 
                                 onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
-                                className="w-8 h-8 border hover:bg-black hover:text-white"
+                                className="w-7 h-7 sm:w-8 sm:h-8 border hover:bg-black hover:text-white text-sm"
                               >
                                 -
                               </button>
-                              <span className="w-12 text-center font-mono">{item.quantity}</span>
+                              <span className="w-8 sm:w-12 text-center font-mono text-sm">{item.quantity}</span>
                               <button 
                                 onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
-                                className="w-8 h-8 border hover:bg-black hover:text-white"
+                                className="w-7 h-7 sm:w-8 sm:h-8 border hover:bg-black hover:text-white text-sm"
                               >
                                 +
                               </button>
                             </div>
-                            <div className="text-2xl font-mono font-bold">
+                            <div className="text-lg sm:text-2xl font-mono font-bold">
                               ${(item.price * item.quantity).toFixed(2)}
                             </div>
                           </div>
@@ -1143,25 +1143,25 @@ export default function TruchemWebsite() {
                 </div>
 
                 <div className="lg:col-span-1">
-                  <div className="bg-white border p-6 sticky top-24">
-                    <h3 className="text-lg font-bold mb-6">Order Summary</h3>
-                    <div className="space-y-3 mb-6 pb-6 border-b">
-                      <div className="flex justify-between">
+                  <div className="bg-white border p-4 sm:p-6 sticky top-24">
+                    <h3 className="text-base sm:text-lg font-bold mb-4 sm:mb-6">Order Summary</h3>
+                    <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span>Subtotal ({cartItemCount} items)</span>
                         <span className="font-mono">${cartTotal.toFixed(2)}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between mb-6">
-                      <span className="font-mono uppercase text-sm">Total</span>
-                      <span className="text-3xl font-mono font-bold">${cartTotal.toFixed(2)}</span>
+                    <div className="flex justify-between items-center mb-4 sm:mb-6">
+                      <span className="font-mono uppercase text-xs sm:text-sm">Total</span>
+                      <span className="text-2xl sm:text-3xl font-mono font-bold">${cartTotal.toFixed(2)}</span>
                     </div>
-                    <button className="w-full py-4 bg-black text-white mb-3 hover:bg-gray-800 font-mono text-sm transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
+                    <button className="w-full py-3 sm:py-4 bg-black text-white mb-2 sm:mb-3 hover:bg-gray-800 font-mono text-sm transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
                       <svg width="42" height="18" viewBox="0 0 42 18" fill="none" className="inline mr-2">
                         <path d="M7.4 0.9c-0.4 0.5-1 0.8-1.7 0.8-0.1 0-0.1-0.1-0.1-0.1 0-0.5 0.2-1 0.5-1.4 0.4-0.5 1-0.9 1.6-0.9 0.1 0 0.1 0.1 0.1 0.1 0 0.5-0.2 0.9-0.4 1.5zM7.5 2c-0.9 0-1.6 0.5-2 0.5-0.5 0-1.2-0.5-2-0.5-1 0-2 0.6-2.5 1.5-1.1 1.8-0.3 4.5 0.8 6 0.5 0.7 1.1 1.5 2 1.5 0.8 0 1.1-0.5 2-0.5 0.9 0 1.1 0.5 2 0.5 0.8 0 1.4-0.8 1.9-1.5 0.6-0.8 0.8-1.6 0.8-1.6 0 0-1.6-0.6-1.6-2.4 0-1.5 1.2-2.2 1.3-2.3-0.7-1-1.8-1.2-2.2-1.2z" fill="currentColor"/>
                       </svg>
                       Pay
                     </button>
-                    <button className="w-full py-4 border-2 border-black font-mono text-sm hover:bg-black hover:text-white transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+                    <button className="w-full py-3 sm:py-4 border-2 border-black font-mono text-sm hover:bg-black hover:text-white transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
                       Checkout
                     </button>
                   </div>
@@ -1172,8 +1172,27 @@ export default function TruchemWebsite() {
         </section>
 
         {/* Footer */}
-        <footer className="mt-auto py-16 px-6 lg:px-12 bg-black text-white">
+        <footer className="mt-auto py-8 sm:py-16 px-4 sm:px-6 lg:px-12 bg-black text-white">
           <div className="max-w-[1400px] mx-auto">
+            {/* Mobile: Simple footer */}
+            <div className="md:hidden">
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-black flex items-center justify-center"><VialIcon inverted={false} size={30} /></div>
+                <div>
+                  <div className="text-xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center text-xs text-gray-500 space-y-2">
+                <div>ISO 9001:2015 FACILITIES • THIRD-PARTY TESTED</div>
+                <div>© 2024 truechem. All rights reserved.</div>
+              </div>
+            </div>
+            
+            {/* Desktop: Full footer */}
+            <div className="hidden md:block">
             <div className="grid md:grid-cols-4 gap-12 mb-12">
               {/* Company */}
               <div>
@@ -1238,6 +1257,7 @@ export default function TruchemWebsite() {
                   <span>THIRD-PARTY TESTED</span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </footer>
