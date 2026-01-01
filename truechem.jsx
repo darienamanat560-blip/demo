@@ -18,6 +18,28 @@ const VialIcon = ({ inverted = false, size = 40 }) => {
 };
 
 export default function TruchemWebsite() {
+  // Add CSS for smooth animations
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.2s ease-out;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProduct, setActiveProduct] = useState(null);
@@ -30,6 +52,7 @@ export default function TruchemWebsite() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [purityValue, setPurityValue] = useState(0);
   const [showCartPopup, setShowCartPopup] = useState(false);
+  const [showCartHover, setShowCartHover] = useState(false);
   const [addedProduct, setAddedProduct] = useState(null);
   const [cart, setCart] = useState([
     {
@@ -340,6 +363,333 @@ export default function TruchemWebsite() {
     );
   });
 
+  // COA PAGE
+  if (currentPage === 'coa') {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA]">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 py-6">
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => setCurrentPage('home')}
+                className="flex items-center space-x-3 cursor-pointer"
+              >
+                <div className="w-10 h-10 bg-black flex items-center justify-center">
+                  <VialIcon inverted={false} size={38} />
+                </div>
+                <div>
+                  <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
+                    <span className="font-bold">true</span>
+                    <span className="font-normal">chem</span>
+                  </div>
+                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
+                </div>
+              </button>
+              
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+                <button 
+                  onClick={() => { setCurrentPage('home'); setTimeout(() => { document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Products
+                </button>
+                <button 
+                  onClick={() => setCurrentPage('manufacturing')}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Actually U.S. made?
+                </button>
+                <button 
+                  onClick={() => { setCurrentPage('home'); setTimeout(() => { document.getElementById('why-truechem')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                  className="text-sm font-medium hover:text-gray-600"
+                >
+                  Why Truechem
+                </button>
+                <button 
+                  onClick={() => setCurrentPage('coa')}
+                  className="text-sm font-medium text-black"
+                >
+                  View COAs
+                </button>
+              </nav>
+
+              <div className="flex items-center space-x-4">
+                {/* Mobile Menu Button */}
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {isMenuOpen ? (
+                      <path d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path d="M3 12h18M3 6h18M3 18h18" />
+                    )}
+                  </svg>
+                </button>
+                
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowCartHover(true)}
+                  onMouseLeave={() => setShowCartHover(false)}
+                >
+                  <button 
+                    onClick={() => setCurrentPage('cart')}
+                    className="p-2 hover:bg-gray-100 rounded-lg relative transition-all duration-200"
+                  >
+                    <ShoppingCart size={20} />
+                    {cart.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-mono">
+                        {cart.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Cart Hover Preview - Hidden on mobile */}
+                  {showCartHover && cart.length > 0 && (
+                    <div className="hidden md:block absolute right-0 top-10 w-96 bg-white border border-gray-200 shadow-xl rounded-lg z-50 animate-fadeIn">
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-sm font-bold">Cart ({cart.length})</span>
+                          <span className="text-xs text-gray-500">Hover to keep open</span>
+                        </div>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {cart.map((item, index) => (
+                          <div key={index} className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                            <div className="flex justify-between items-start gap-3">
+                              <button
+                                onClick={() => {
+                                  setSelectedProduct(products.find(p => p.name === item.name));
+                                  setShowCartHover(false);
+                                  setCurrentPage('home');
+                                }}
+                                className="flex-1 text-left hover:text-gray-600 transition-colors"
+                              >
+                                <div className="font-medium text-sm">{item.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                              </button>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1">
+                                  <button
+                                    onClick={() => {
+                                      const newCart = [...cart];
+                                      if (newCart[index].quantity > 1) {
+                                        newCart[index].quantity -= 1;
+                                        setCart(newCart);
+                                      }
+                                    }}
+                                    className="text-gray-600 hover:text-black text-sm font-mono"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="text-xs font-mono w-6 text-center">{item.quantity || 1}</span>
+                                  <button
+                                    onClick={() => {
+                                      const newCart = [...cart];
+                                      newCart[index].quantity = (newCart[index].quantity || 1) + 1;
+                                      setCart(newCart);
+                                    }}
+                                    className="text-gray-600 hover:text-black text-sm font-mono"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <div className="text-sm font-mono w-16 text-right">${(parseFloat(item.price) * (item.quantity || 1)).toFixed(2)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-4 bg-gray-50">
+                        <button
+                          onClick={() => { setCurrentPage('cart'); setShowCartHover(false); }}
+                          className="w-full py-2 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-colors duration-200"
+                        >
+                          View Cart
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Mobile Menu Dropdown */}
+        {isMenuOpen && (
+          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40 animate-fadeIn">
+            <nav className="px-6 py-4 space-y-4">
+              <button 
+                onClick={() => { setCurrentPage('home'); setIsMenuOpen(false); setTimeout(() => { document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Products
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('manufacturing'); setIsMenuOpen(false); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Actually U.S. made?
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('home'); setIsMenuOpen(false); setTimeout(() => { document.getElementById('why-truechem')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Why Truechem
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('coa'); setIsMenuOpen(false); }}
+                className="block w-full text-left text-base font-medium text-black hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                View COAs
+              </button>
+            </nav>
+          </div>
+        )}
+
+        {/* COA Content */}
+        <section className="py-20 px-6 lg:px-12 bg-white">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-6">
+                Certificates of Analysis
+              </div>
+              <h1 className="text-5xl lg:text-6xl font-bold text-black mb-6">
+                Cleaner. Safer. Stronger.
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Every batch is third-party tested. Download Certificates of Analysis for complete transparency and verification.
+              </p>
+            </div>
+
+            {/* COA Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map((product) => (
+                <div key={product.id} className="bg-white border-2 border-gray-300 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-black mb-2">{product.name}</h3>
+                    <div className="text-xs font-mono text-gray-500 mb-1">CAS: {product.cas}</div>
+                    <div className="text-xs font-mono text-gray-500 mb-3">Purity: {product.purity}</div>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-4">
+                    <button className="flex-1 px-4 py-3 bg-black text-white font-mono text-xs hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
+                      <span className="underline underline-offset-2">Current Batch</span>
+                    </button>
+                    <button className="flex-1 px-4 py-3 border border-gray-300 text-gray-900 font-mono text-xs hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
+                      <span className="underline underline-offset-2">Previous Batch</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Batch: {product.id.toUpperCase()}-2024</span>
+                      <span>Tested: Dec 2024</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Info Section */}
+            <div className="mt-16 bg-gray-50 border border-gray-200 rounded-lg p-8">
+              <h2 className="text-2xl font-bold mb-4">What's in a COA?</h2>
+              <div className="grid md:grid-cols-3 gap-6 text-sm">
+                <div>
+                  <div className="font-bold mb-2">Purity Analysis</div>
+                  <p className="text-gray-600">HPLC verification showing compound purity exceeding 99%</p>
+                </div>
+                <div>
+                  <div className="font-bold mb-2">Identity Confirmation</div>
+                  <p className="text-gray-600">Mass spectrometry and NMR verification of molecular structure</p>
+                </div>
+                <div>
+                  <div className="font-bold mb-2">Safety Testing</div>
+                  <p className="text-gray-600">Heavy metal screening and microbial contamination testing</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Company */}
+              <div>
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-black flex items-center justify-center"><VialIcon inverted={false} size={38} /></div>
+                  <div>
+                    <div className="text-2xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
+                      <span className="font-bold">true</span>
+                      <span className="font-normal">chem</span>
+                    </div>
+                    <div className="text-[9px] font-mono tracking-[0.15em] text-gray-400 uppercase">99%+ Certified</div>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  Manufactured in ISO 9001:2015 certified facilities. Ultra-pure compounds exceeding 99% purity for scientific research.
+                </p>
+              </div>
+
+              {/* Products */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Growth Factors</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Custom Synthesis</a></li>
+                </ul>
+              </div>
+
+              {/* Resources */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Resources</div>
+                <ul className="space-y-2 text-sm">
+                  <li><button onClick={() => setCurrentPage('coa')} className="text-gray-300 hover:text-white transition-colors">Certificates of Analysis</button></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Testing Methodology</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Safety Data Sheets</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Research Library</a></li>
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Company</div>
+                <ul className="space-y-2 text-sm">
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                  <li><button onClick={() => setCurrentPage('manufacturing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                  <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Terms of Service</a></li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="pt-8 border-t border-gray-800">
+              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="text-xs font-mono text-gray-500">
+                  © 2024 truechem. All rights reserved.
+                </div>
+                <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
+                  <span>ISO 9001:2015 FACILITIES</span>
+                  <span>•</span>
+                  <span>THIRD-PARTY TESTED</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
   // MANUFACTURING PAGE
   if (currentPage === 'manufacturing') {
     return (
@@ -393,21 +743,140 @@ export default function TruchemWebsite() {
               </nav>
 
               <div className="flex items-center space-x-4">
+                {/* Mobile Menu Button */}
                 <button 
-                  onClick={() => setCurrentPage('cart')}
-                  className="p-2 hover:bg-gray-100 rounded-lg relative"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
                 >
-                  <ShoppingCart size={20} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-mono">
-                      {cart.length}
-                    </span>
-                  )}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {isMenuOpen ? (
+                      <path d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path d="M3 12h18M3 6h18M3 18h18" />
+                    )}
+                  </svg>
                 </button>
+                
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowCartHover(true)}
+                  onMouseLeave={() => setShowCartHover(false)}
+                >
+                  <button 
+                    onClick={() => setCurrentPage('cart')}
+                    className="p-2 hover:bg-gray-100 rounded-lg relative transition-all duration-200"
+                  >
+                    <ShoppingCart size={20} />
+                    {cart.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-mono">
+                        {cart.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Cart Hover Preview - Hidden on mobile */}
+                  {showCartHover && cart.length > 0 && (
+                    <div className="hidden md:block absolute right-0 top-10 w-96 bg-white border border-gray-200 shadow-xl rounded-lg z-50 animate-fadeIn">
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-sm font-bold">Cart ({cart.length})</span>
+                          <span className="text-xs text-gray-500">Hover to keep open</span>
+                        </div>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {cart.map((item, index) => (
+                          <div key={index} className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                            <div className="flex justify-between items-start gap-3">
+                              <button
+                                onClick={() => {
+                                  setSelectedProduct(products.find(p => p.name === item.name));
+                                  setShowCartHover(false);
+                                  setCurrentPage('home');
+                                }}
+                                className="flex-1 text-left hover:text-gray-600 transition-colors"
+                              >
+                                <div className="font-medium text-sm">{item.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                              </button>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1">
+                                  <button
+                                    onClick={() => {
+                                      const newCart = [...cart];
+                                      if (newCart[index].quantity > 1) {
+                                        newCart[index].quantity -= 1;
+                                        setCart(newCart);
+                                      }
+                                    }}
+                                    className="text-gray-600 hover:text-black text-sm font-mono"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="text-xs font-mono w-6 text-center">{item.quantity || 1}</span>
+                                  <button
+                                    onClick={() => {
+                                      const newCart = [...cart];
+                                      newCart[index].quantity = (newCart[index].quantity || 1) + 1;
+                                      setCart(newCart);
+                                    }}
+                                    className="text-gray-600 hover:text-black text-sm font-mono"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <div className="text-sm font-mono w-16 text-right">${(parseFloat(item.price) * (item.quantity || 1)).toFixed(2)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-4 bg-gray-50">
+                        <button
+                          onClick={() => { setCurrentPage('cart'); setShowCartHover(false); }}
+                          className="w-full py-2 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-colors duration-200"
+                        >
+                          View Cart
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </header>
+
+        {/* Mobile Menu Dropdown */}
+        {isMenuOpen && (
+          <div className="md:hidden fixed top-[72px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40 animate-fadeIn">
+            <nav className="px-6 py-4 space-y-4">
+              <button 
+                onClick={() => { setCurrentPage('home'); setIsMenuOpen(false); setTimeout(() => { document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Products
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('manufacturing'); setIsMenuOpen(false); }}
+                className="block w-full text-left text-base font-medium text-black hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Actually U.S. made?
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('home'); setIsMenuOpen(false); setTimeout(() => { document.getElementById('why-truechem')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Why Truechem
+              </button>
+              <button 
+                onClick={() => { setCurrentPage('home'); setIsMenuOpen(false); setTimeout(() => { document.getElementById('purity')?.scrollIntoView({ behavior: 'smooth' }); }, 100); }}
+                className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+              >
+                Purity
+              </button>
+            </nav>
+          </div>
+        )}
 
         {/* Manufacturing Transparency Content */}
         <section className="py-20 px-6 lg:px-12 bg-white">
@@ -585,7 +1054,7 @@ export default function TruchemWebsite() {
   // CART PAGE
   if (currentPage === 'cart') {
     return (
-      <div className="min-h-screen bg-[#FAFAFA]">
+      <div className="min-h-screen bg-black flex flex-col">
         <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
           <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
             <div className="flex items-center justify-between h-20">
@@ -609,7 +1078,7 @@ export default function TruchemWebsite() {
           </div>
         </header>
 
-        <section className="pt-32 pb-16 px-6 lg:px-12">
+        <section className="flex-1 pt-32 pb-16 px-6 lg:px-12 bg-[#FAFAFA]">
           <div className="max-w-[1200px] mx-auto">
             <h1 className="text-4xl font-bold mb-4">Shopping Cart</h1>
             <p className="text-gray-600 mb-12">Review your order</p>
@@ -719,7 +1188,7 @@ export default function TruchemWebsite() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+                  Manufactured in ISO 9001:2015 certified facilities. Ultra-pure compounds exceeding 99% purity for scientific research.
                 </p>
               </div>
 
@@ -764,7 +1233,7 @@ export default function TruchemWebsite() {
                   © 2024 truechem. All rights reserved.
                 </div>
                 <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
-                  <span>ISO 9001:2015 CERTIFIED</span>
+                  <span>ISO 9001:2015 FACILITIES</span>
                   <span>•</span>
                   <span>THIRD-PARTY TESTED</span>
                 </div>
@@ -985,7 +1454,7 @@ export default function TruchemWebsite() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+                  Manufactured in ISO 9001:2015 certified facilities. Ultra-pure compounds exceeding 99% purity for scientific research.
                 </p>
               </div>
 
@@ -1030,7 +1499,7 @@ export default function TruchemWebsite() {
                   © 2024 truechem. All rights reserved.
                 </div>
                 <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
-                  <span>ISO 9001:2015 CERTIFIED</span>
+                  <span>ISO 9001:2015 FACILITIES</span>
                   <span>•</span>
                   <span>THIRD-PARTY TESTED</span>
                 </div>
@@ -1189,33 +1658,158 @@ export default function TruchemWebsite() {
                 Actually U.S. made?
               </button>
               <a href="#why-truechem" className="text-sm font-medium hover:text-gray-600">Why Truechem</a>
-              <a href="#purity" className="text-sm font-medium hover:text-gray-600">Purity</a>
+              <button 
+                onClick={() => setCurrentPage('coa')}
+                className="text-sm font-medium hover:text-gray-600"
+              >
+                View COAs
+              </button>
             </nav>
 
             <div className="flex items-center space-x-4">
+              {/* Mobile Menu Button */}
               <button 
-                onClick={() => setCurrentPage('cart')}
-                className="p-2 hover:bg-gray-100 rounded-lg relative"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
               >
-                <ShoppingCart size={20} />
-                {cartItemCount > 0 && (
-                  <span className="absolute top-1 right-1 w-5 h-5 bg-black text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {isMenuOpen ? (
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                  )}
+                </svg>
               </button>
+              
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowCartHover(true)}
+                onMouseLeave={() => setShowCartHover(false)}
+              >
+                <button 
+                  onClick={() => setCurrentPage('cart')}
+                  className="p-2 hover:bg-gray-100 rounded-lg relative transition-all duration-200"
+                >
+                  <ShoppingCart size={20} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute top-1 right-1 w-5 h-5 bg-black text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Cart Hover Preview - Hidden on mobile */}
+                {showCartHover && cartItemCount > 0 && (
+                  <div className="hidden md:block absolute right-0 top-10 w-96 bg-white border border-gray-200 shadow-xl rounded-lg z-50 animate-fadeIn">
+                    <div className="p-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm font-bold">Cart ({cartItemCount})</span>
+                        <span className="text-xs text-gray-500">Hover to keep open</span>
+                      </div>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {cart.map((item, index) => (
+                        <div key={index} className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                          <div className="flex justify-between items-start gap-3">
+                            <button
+                              onClick={() => {
+                                setSelectedProduct(products.find(p => p.name === item.name));
+                                setShowCartHover(false);
+                              }}
+                              className="flex-1 text-left hover:text-gray-600 transition-colors"
+                            >
+                              <div className="font-medium text-sm">{item.name}</div>
+                              <div className="text-xs text-gray-500 mt-1">{item.size}</div>
+                            </button>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1">
+                                <button
+                                  onClick={() => {
+                                    const newCart = [...cart];
+                                    if (newCart[index].quantity > 1) {
+                                      newCart[index].quantity -= 1;
+                                      setCart(newCart);
+                                    }
+                                  }}
+                                  className="text-gray-600 hover:text-black text-sm font-mono"
+                                >
+                                  −
+                                </button>
+                                <span className="text-xs font-mono w-6 text-center">{item.quantity || 1}</span>
+                                <button
+                                  onClick={() => {
+                                    const newCart = [...cart];
+                                    newCart[index].quantity = (newCart[index].quantity || 1) + 1;
+                                    setCart(newCart);
+                                  }}
+                                  className="text-gray-600 hover:text-black text-sm font-mono"
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <div className="text-sm font-mono w-16 text-right">${(parseFloat(item.price) * (item.quantity || 1)).toFixed(2)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 bg-gray-50">
+                      <button
+                        onClick={() => { setCurrentPage('cart'); setShowCartHover(false); }}
+                        className="w-full py-2 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-colors duration-200"
+                      >
+                        View Cart
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Mobile Menu Dropdown */}
+      {isMenuOpen && (
+        <div className="md:hidden fixed top-20 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40 animate-fadeIn">
+          <nav className="px-6 py-4 space-y-4">
+            <a 
+              href="#products" 
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+            >
+              Products
+            </a>
+            <button 
+              onClick={() => { setCurrentPage('manufacturing'); setIsMenuOpen(false); }}
+              className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+            >
+              Actually U.S. made?
+            </button>
+            <a 
+              href="#why-truechem" 
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+            >
+              Why Truechem
+            </a>
+            <button 
+              onClick={() => { setCurrentPage('coa'); setIsMenuOpen(false); }}
+              className="block w-full text-left text-base font-medium text-gray-900 hover:text-gray-600 hover:bg-gray-50 py-2 px-3 rounded-lg transition-all duration-200"
+            >
+              View COAs
+            </button>
+          </nav>
+        </div>
+      )}
+
       <section className="pt-32 pb-16 px-6 lg:px-12">
         <div className="max-w-[1400px] mx-auto">
           <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-8">
-            ISO 9001:2015 Certified
+            ISO 9001:2015 Certified Facilities
           </div>
           
-          <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-[0.95]">Purer Than<br/>Research Grade<br/>Compounds</h1>
+          <h1 className="text-6xl lg:text-8xl font-bold mb-8 leading-[0.95]">Ultra-Pure<br/>Research<br/>Compounds</h1>
           
           <p className="text-xl text-gray-600 mb-8 max-w-2xl">
             Precision compounds for scientific research. Third-party tested. 
@@ -1226,24 +1820,27 @@ export default function TruchemWebsite() {
             <a href="#products" className="px-8 py-4 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.1)]">
               View Products
             </a>
-            <button className="px-8 py-4 border border-gray-300 text-gray-900 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
+            <button 
+              onClick={() => setCurrentPage('coa')}
+              className="px-8 py-4 border border-gray-300 text-gray-900 font-mono text-sm hover:border-black transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.05)]"
+            >
               View COAs
             </button>
           </div>
 
           <div className="border-t border-gray-200 pt-8">
-            <div className="grid grid-cols-3 gap-6 max-w-lg">
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 max-w-lg">
               <div>
-                <div className="text-2xl font-mono font-bold text-black mb-1">98.5%</div>
-                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Min. Purity</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-black mb-1">98.5%</div>
+                <div className="text-[8px] sm:text-[10px] font-mono tracking-wider text-gray-500 uppercase">Min. Purity</div>
               </div>
               <div>
-                <div className="text-2xl font-mono font-bold text-black mb-1">24HR</div>
-                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Shipping</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-black mb-1">24HR</div>
+                <div className="text-[8px] sm:text-[10px] font-mono tracking-wider text-gray-500 uppercase">Shipping</div>
               </div>
               <div>
-                <div className="text-2xl font-mono font-bold text-black mb-1">100%</div>
-                <div className="text-[10px] font-mono tracking-wider text-gray-500 uppercase">Verified</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-mono font-bold text-black mb-1">100%</div>
+                <div className="text-[8px] sm:text-[10px] font-mono tracking-wider text-gray-500 uppercase">Verified</div>
               </div>
             </div>
           </div>
@@ -1255,7 +1852,7 @@ export default function TruchemWebsite() {
         <div className="max-w-[1400px] mx-auto">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-6">
-              Third-Party Verified
+              ISO 9001:2015 Certified Facilities
             </div>
             
             <h2 className="text-4xl lg:text-5xl font-bold text-black mb-4">
@@ -1268,7 +1865,7 @@ export default function TruchemWebsite() {
 
             {/* Purity Meter */}
             <div className="bg-gray-50 border border-gray-200 p-12 mb-8">
-              <div className="text-8xl lg:text-9xl font-mono font-bold text-black mb-8 tabular-nums">
+              <div className="text-5xl sm:text-7xl lg:text-9xl font-mono font-bold text-black mb-8 tabular-nums">
                 {purityValue.toFixed(1)}%
               </div>
               
@@ -1288,18 +1885,18 @@ export default function TruchemWebsite() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-3xl font-mono font-bold text-black mb-2">847</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Batches Tested</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold text-black mb-2">847</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Batches Tested</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-mono font-bold text-black mb-2">100%</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Third-Party Verified</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold text-black mb-2">100%</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">ISO 9001:2015 Certified Facilities</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-mono font-bold text-black mb-2">Q4 2024</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Current Quarter</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-mono font-bold text-black mb-2">Q4 2024</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Current Quarter</div>
               </div>
             </div>
 
@@ -1310,13 +1907,13 @@ export default function TruchemWebsite() {
               <div className="space-y-6 max-w-2xl mx-auto">
                 {/* truechem */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-black flex items-center justify-center"><VialIcon size={23} /></div>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black flex items-center justify-center flex-shrink-0"><VialIcon size={20} /></div>
                       <span className="font-bold text-sm">truechem</span>
-                      <span className="text-xs font-mono text-gray-500">(ISO-Certified, COA Verified)</span>
+                      <span className="text-[10px] sm:text-xs font-mono text-gray-500 whitespace-nowrap">(ISO-Mfg, COA)</span>
                     </div>
-                    <span className="text-lg font-mono font-bold">99.2%</span>
+                    <span className="text-base sm:text-lg font-mono font-bold ml-10 sm:ml-0">99.2%</span>
                   </div>
                   <div className="h-8 bg-gray-200 relative overflow-hidden">
                     <div 
@@ -1328,14 +1925,14 @@ export default function TruchemWebsite() {
 
                 {/* Research Grade Standard */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-600">Research Grade Standard</span>
-                      <span className="text-xs font-mono text-gray-400">(Industry Minimum)</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <span className="text-xs sm:text-sm text-gray-600">Research Grade Standard</span>
+                      <span className="text-[10px] sm:text-xs font-mono text-gray-400 whitespace-nowrap">(Industry Min)</span>
                     </div>
-                    <span className="text-lg font-mono font-bold text-gray-600">95.0%</span>
+                    <span className="text-base sm:text-lg font-mono font-bold text-gray-600">95.0%</span>
                   </div>
-                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                  <div className="h-6 sm:h-8 bg-gray-200 relative overflow-hidden">
                     <div 
                       className="h-full bg-gray-400 transition-all duration-300"
                       style={{ width: '95.0%' }}
@@ -1345,14 +1942,14 @@ export default function TruchemWebsite() {
 
                 {/* Chinese Manufacturing */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-600">Chinese Manufacturing</span>
-                      <span className="text-xs font-mono text-gray-400">(Typical Range)</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <span className="text-xs sm:text-sm text-gray-600">Chinese Manufacturing</span>
+                      <span className="text-[10px] sm:text-xs font-mono text-gray-400 whitespace-nowrap">(Typical)</span>
                     </div>
-                    <span className="text-lg font-mono font-bold text-gray-600">85-92%</span>
+                    <span className="text-base sm:text-lg font-mono font-bold text-gray-600">85-92%</span>
                   </div>
-                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                  <div className="h-6 sm:h-8 bg-gray-200 relative overflow-hidden">
                     <div 
                       className="h-full bg-gray-300 transition-all duration-300"
                       style={{ width: '88.5%' }}
@@ -1362,14 +1959,14 @@ export default function TruchemWebsite() {
 
                 {/* Underground Labs */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm text-gray-600">Underground Labs</span>
-                      <span className="text-xs font-mono text-gray-400">(Unverified)</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <span className="text-xs sm:text-sm text-gray-600">Underground Labs</span>
+                      <span className="text-[10px] sm:text-xs font-mono text-gray-400 whitespace-nowrap">(Unverified)</span>
                     </div>
-                    <span className="text-lg font-mono font-bold text-gray-600">70-85%</span>
+                    <span className="text-base sm:text-lg font-mono font-bold text-gray-600">70-85%</span>
                   </div>
-                  <div className="h-8 bg-gray-200 relative overflow-hidden">
+                  <div className="h-6 sm:h-8 bg-gray-200 relative overflow-hidden">
                     <div 
                       className="h-full bg-gray-300 transition-all duration-300"
                       style={{ width: '77.5%' }}
@@ -1378,8 +1975,8 @@ export default function TruchemWebsite() {
                 </div>
               </div>
 
-              <div className="mt-8 max-w-2xl mx-auto bg-gray-50 border border-gray-200 p-6">
-                <p className="text-sm text-gray-700 text-center leading-relaxed">
+              <div className="mt-8 max-w-2xl mx-auto bg-gray-50 border border-gray-200 p-4 sm:p-6">
+                <p className="text-xs sm:text-sm text-gray-700 text-center leading-relaxed">
                   <span className="font-bold">Research Grade</span> classification requires only <span className="font-mono font-bold">95% minimum purity</span>. 
                   Many suppliers source from overseas manufacturers with inconsistent quality control. 
                   Our compounds average <span className="font-mono font-bold">99.2%</span> — exceeding research grade standards with US-based manufacturing and independent third-party verification.
@@ -1417,7 +2014,7 @@ export default function TruchemWebsite() {
               </div>
               <h3 className="text-xl font-bold text-black mb-4">US-Based Manufacturing</h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Unlike most suppliers who import from overseas, we manufacture domestically under strict ISO 9001:2015 certification with rigorous quality controls.
+                Unlike most suppliers who import from overseas, we use ISO 9001:2015 certified facilities operating domestically under strict quality controls with rigorous quality controls.
               </p>
               <div className="text-sm font-mono text-gray-500">
                 <CheckCircle size={16} className="inline mr-2" />
@@ -1458,42 +2055,42 @@ export default function TruchemWebsite() {
 
           {/* Trust Indicators */}
           <div className="mt-16 pt-12 border-t border-gray-200 max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
               <div>
-                <div className="text-3xl font-mono font-bold text-black mb-2">5,000+</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Orders Shipped</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-black mb-2">5,000+</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Orders Shipped</div>
               </div>
               <div>
-                <div className="text-3xl font-mono font-bold text-black mb-2">24HR</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Average Delivery</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-black mb-2">24HR</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Average Delivery</div>
               </div>
               <div>
-                <div className="text-3xl font-mono font-bold text-black mb-2">99.2%</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Avg Purity</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-black mb-2">99.2%</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Avg Purity</div>
               </div>
               <div>
-                <div className="text-3xl font-mono font-bold text-black mb-2">4.9★</div>
-                <div className="text-xs font-mono text-gray-500 uppercase tracking-wider">Customer Rating</div>
+                <div className="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-black mb-2">4.9★</div>
+                <div className="text-[9px] sm:text-xs font-mono text-gray-500 uppercase tracking-wider">Customer Rating</div>
               </div>
             </div>
           </div>
 
           {/* Industry Comparison */}
-          <div className="mt-12 bg-black text-white p-8 max-w-3xl mx-auto">
+          <div className="mt-12 bg-black text-white p-6 sm:p-8 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="text-xs font-mono text-gray-400 uppercase mb-6 tracking-wider">
                 Industry Standard vs. truechem
               </div>
-              <div className="grid grid-cols-2 gap-8 mb-6">
-                <div className="border-r border-gray-700 pr-8">
-                  <div className="text-sm text-gray-400 mb-2">Research Grade</div>
-                  <div className="text-4xl font-mono font-bold">95.0%</div>
-                  <div className="text-xs text-gray-500 mt-2">Minimum Required</div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-8 mb-6">
+                <div className="border-r border-gray-700 pr-4 sm:pr-8">
+                  <div className="text-xs sm:text-sm text-gray-400 mb-2">Research Grade</div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold">95.0%</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-2">Minimum Required</div>
                 </div>
-                <div className="pl-8">
-                  <div className="text-sm text-gray-400 mb-2">truechem Average</div>
-                  <div className="text-4xl font-mono font-bold text-green-400">99.2%</div>
-                  <div className="text-xs text-gray-500 mt-2">Verified by COA</div>
+                <div className="pl-4 sm:pl-8">
+                  <div className="text-xs sm:text-sm text-gray-400 mb-2">truechem Average</div>
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold text-green-400">99.2%</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 mt-2">Verified by COA</div>
                 </div>
               </div>
               <div className="pt-6 border-t border-gray-800">
@@ -1563,7 +2160,7 @@ export default function TruchemWebsite() {
                 </div>
               </div>
               <p className="text-sm text-gray-400 leading-relaxed">
-                ISO 9001:2015 certified laboratory supplier. Ultra-pure compounds exceeding 99% purity for scientific research.
+                Manufactured in ISO 9001:2015 certified facilities. Ultra-pure compounds exceeding 99% purity for scientific research.
               </p>
             </div>
 
@@ -1608,7 +2205,7 @@ export default function TruchemWebsite() {
                 © 2024 truechem. All rights reserved.
               </div>
               <div className="flex items-center space-x-6 text-xs font-mono text-gray-500">
-                <span>ISO 9001:2015 CERTIFIED</span>
+                <span>ISO 9001:2015 FACILITIES</span>
                 <span>•</span>
                 <span>THIRD-PARTY TESTED</span>
               </div>
