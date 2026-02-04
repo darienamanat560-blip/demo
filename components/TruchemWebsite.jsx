@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker, FileText, AlertCircle } from 'lucide-react';
 
