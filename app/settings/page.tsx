@@ -3,11 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function AccountPage() {
+export default function SettingsPage() {
   const router = useRouter()
   
   useEffect(() => {
-    router.push('/account/dashboard')
+    router.push('/account/settings')
   }, [router])
 
   return <div className="min-h-screen bg-white" />

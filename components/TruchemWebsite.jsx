@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker, FileText, AlertCircle } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, CheckCircle, Shield, Award, Beaker, FileText, AlertCircle, User, LogOut, Package } from 'lucide-react';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import NewsletterBlock from './NewsletterBlock';
+import FooterNewsletter from './FooterNewsletter';
+import BackInStockNotification from './BackInStockNotification';
 
 // Vial Logo Component - Inverts on light backgrounds
 const VialIcon = ({ inverted = false, size = 40 }) => {
@@ -20,6 +25,11 @@ const VialIcon = ({ inverted = false, size = 40 }) => {
 };
 
 export default function TruchemWebsite() {
+  // Clerk authentication
+  const { user, isSignedIn } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
+  
   // Add CSS for smooth animations
   useEffect(() => {
     const style = document.createElement('style');
@@ -165,6 +175,7 @@ export default function TruchemWebsite() {
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [openFAQ, setOpenFAQ] = useState(null);
   const [cart, setCart] = useState([]);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [notifyProduct, setNotifyProduct] = useState(null);
   const [notifyEmail, setNotifyEmail] = useState('');
@@ -257,7 +268,26 @@ export default function TruchemWebsite() {
 
   // Navigate to page with scroll to top and smooth animation
   const navigateTo = (page) => {
+    // For auth and checkout pages, navigate immediately without animation
+    if (page === 'checkout') {
+      localStorage.setItem('cart', JSON.stringify(cart));
+      router.push('/checkout');
+      return;
+    }
+    
+    if (page === 'signin') {
+      router.push('/sign-in');
+      return;
+    }
+    
+    if (page === 'signup') {
+      router.push('/sign-up');
+      return;
+    }
+    
+    // For regular pages, use animation
     setPageTransition(true);
+    
     setTimeout(() => {
       setCurrentPage(page);
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1144,15 +1174,12 @@ export default function TruchemWebsite() {
 
   // Helper to navigate to products with category filter
   const goToCategory = (category) => {
-    setSelectedCategory(category);
+    setCategoryFilter(category);
     setPageTransition(true);
     setTimeout(() => {
-      setCurrentPage('home');
+      setCurrentPage('products');
       window.scrollTo({ top: 0, behavior: 'instant' });
       setPageTransition(false);
-      setTimeout(() => {
-        document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
     }, 150);
   };
 
@@ -1259,6 +1286,70 @@ export default function TruchemWebsite() {
                     )}
                   </svg>
                 </button>
+
+                {/* Account Button - Only show when signed in */}
+                {isSignedIn ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowAccountMenu(!showAccountMenu)}
+                      onBlur={() => setTimeout(() => setShowAccountMenu(false), 200)}
+                      className="p-2 hover:bg-gray-100 rounded-lg relative transition-all duration-200"
+                    >
+                      <User size={20} />
+                    </button>
+
+                    {/* Account Dropdown Menu */}
+                    {showAccountMenu && (
+                      <div className="absolute right-0 top-12 w-56 bg-white border border-gray-200 shadow-xl rounded-lg z-50 animate-fadeIn">
+                        <div className="p-3 border-b border-gray-200">
+                          <div className="text-sm font-bold truncate">{user?.primaryEmailAddress?.emailAddress}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {user?.firstName || 'Account'}
+                          </div>
+                        </div>
+
+                        <div className="py-2">
+                          <button
+                            onClick={() => {
+                              setShowAccountMenu(false);
+                              router.push('/account/dashboard');
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2"
+                          >
+                            <Package size={16} />
+                            <span>My Account</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setShowAccountMenu(false);
+                              signOut(() => router.push('/'));
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2 text-red-600"
+                          >
+                            <LogOut size={16} />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="hidden md:flex items-center gap-2">
+                    <button 
+                      onClick={() => router.push('/sign-in')}
+                      className="px-4 py-2 text-sm font-mono hover:bg-gray-100 rounded-lg transition-all"
+                    >
+                      Log In
+                    </button>
+                    <button 
+                      onClick={() => router.push('/sign-up')}
+                      className="px-4 py-2 bg-black text-white text-sm font-mono hover:bg-gray-800 rounded-lg transition-all"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                )}
                 
                 <div 
                   className="relative"
@@ -1639,6 +1730,10 @@ export default function TruchemWebsite() {
 
             <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
+          {/* Footer Newsletter */}
+          <FooterNewsletter />
+
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -1662,10 +1757,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -1688,6 +1784,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
@@ -2128,6 +2225,10 @@ export default function TruchemWebsite() {
 
             <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
+          {/* Footer Newsletter */}
+          <FooterNewsletter />
+
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -2151,10 +2252,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -2177,6 +2279,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
@@ -2312,11 +2415,23 @@ export default function TruchemWebsite() {
                       Pay
                     </button>
                     <button 
-                      onClick={() => navigateTo('checkout')}
+                      onClick={() => {
+                        if (isSignedIn) {
+                          localStorage.setItem('cart', JSON.stringify(cart));
+                          router.push('/checkout');
+                        } else {
+                          router.push('/sign-in');
+                        }
+                      }}
                       className="w-full py-3 sm:py-4 border-2 border-black font-mono text-sm hover:bg-black hover:text-white transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.08)]"
                     >
-                      Checkout
+                      {isSignedIn ? 'Checkout' : 'Sign In to Checkout'}
                     </button>
+                    {!isSignedIn && (
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        You need to sign in to complete your purchase
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2369,9 +2484,9 @@ export default function TruchemWebsite() {
                 <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
                 <ul className="space-y-2 text-sm">
                   <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                  <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                  <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                  <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                  <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                  <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                  <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 </ul>
               </div>
 
@@ -2392,6 +2507,7 @@ export default function TruchemWebsite() {
                   <li><button onClick={() => navigateTo('our-story')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                   <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                   <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                   <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
                 </ul>
               </div>
@@ -2454,535 +2570,240 @@ export default function TruchemWebsite() {
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section className="pt-32 pb-20 px-6 lg:px-12 bg-black text-white">
-          <div className="max-w-[1400px] mx-auto text-center">
-            <div className="inline-block px-4 py-1 bg-white bg-opacity-10 text-xs font-mono tracking-wider uppercase mb-6">
-              Research Club
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Exclusive Access.<br />Premium Research.
+        {/* Hero */}
+        <section className="pt-40 pb-24 px-6 lg:px-12">
+          <div className="max-w-[1100px] mx-auto">
+            <p className="text-[10px] font-mono tracking-[0.35em] text-gray-500 uppercase mb-6">truechem / research club</p>
+            <h1 className="text-6xl md:text-7xl font-bold text-white leading-[1.05] mb-8 tracking-tight">
+              Not for everyone.<br />
+              <span className="text-gray-500">Built for those</span><br />
+              who demand more.
             </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Join an elite community of researchers with access to premium compounds, 
-              in-depth analysis, and dedicated support.
+            <div className="w-12 h-px bg-[#2DD4BF] mb-8"></div>
+            <p className="text-gray-400 text-lg max-w-xl leading-relaxed">
+              Monthly store credit. Early access to every new compound. 
+              Pricing that rewards serious researchers.
             </p>
           </div>
         </section>
 
-        {/* Membership Tiers */}
-        <section className="py-20 px-6 lg:px-12 bg-black">
-          <div className="max-w-[1400px] mx-auto">
-            
-            <div className="grid lg:grid-cols-3 gap-8">
-              
-              {/* Free Tier */}
-              <div className="bg-black border-2 border-gray-800 hover:border-gray-700 transition-all">
-                <div className="p-8">
-                  <div className="text-xs font-mono tracking-wider text-gray-500 uppercase mb-2">Newsletter</div>
-                  <h3 className="text-3xl font-bold text-white mb-2">Free</h3>
-                  <div className="text-4xl font-mono font-bold text-white mb-6">
-                    $0<span className="text-lg text-gray-500">/month</span>
+        {/* Tier cards */}
+        <section className="pb-4 px-6 lg:px-12">
+          <div className="max-w-[1100px] mx-auto grid lg:grid-cols-3 gap-0 border border-gray-800">
+
+            {/* Free */}
+            <div className="border-r border-gray-800 p-10">
+              <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 uppercase mb-6">Standard</p>
+              <div className="text-5xl font-bold text-gray-600 mb-1 font-mono">$0</div>
+              <p className="text-xs text-gray-700 font-mono mb-8">forever</p>
+              <div className="space-y-3 mb-10">
+                {['All products', 'COA downloads', 'Order history', 'Restock alerts', 'Newsletter'].map(f => (
+                  <div key={f} className="flex items-center gap-3">
+                    <div className="w-3 h-px bg-gray-700"></div>
+                    <span className="text-xs text-gray-600">{f}</span>
                   </div>
-                  <button 
-                    onClick={() => alert('Newsletter signup coming soon!')}
-                    className="w-full py-3 border-2 border-gray-700 font-mono text-sm text-white hover:bg-gray-900 transition-all mb-8"
-                  >
-                    Subscribe
-                  </button>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Monthly research newsletter</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">New product announcements</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Basic dosing guidelines</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Community access</div>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              {/* Premium Tier */}
-              <div className="bg-black border-2 border-teal-400 relative shadow-[0_0_30px_rgba(45,212,191,0.3)]">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <div className="bg-teal-400 text-black px-4 py-1 text-xs font-mono tracking-wider uppercase font-bold">
-                    Most Popular
-                  </div>
-                </div>
-                <div className="p-8">
-                  <div className="text-xs font-mono tracking-wider text-teal-400 uppercase mb-2">Premium</div>
-                  <h3 className="text-3xl font-bold text-white mb-2">Research Club</h3>
-                  <div className="text-4xl font-mono font-bold text-white mb-6">
-                    $199<span className="text-lg text-gray-500">/year</span>
-                  </div>
-                  <button 
-                    onClick={() => alert('Membership signup coming soon!')}
-                    className="w-full py-3 bg-teal-400 text-black font-mono text-sm hover:bg-teal-300 transition-all mb-8"
-                  >
-                    Join Now
-                  </button>
-                  
-                  <div className="space-y-4">
-                    {/* Store Credit Highlight */}
-                    <div className="bg-teal-400/10 border border-teal-400/30 p-4 -mx-2 mb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-xs font-mono uppercase tracking-wider text-teal-400">Welcome Bonus</div>
-                        <div className="text-2xl font-mono font-bold text-teal-400">$250</div>
-                      </div>
-                      <div className="text-xs text-gray-400">Store credit • Use within 90 days</div>
-                    </div>
-
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm font-bold text-white">Everything in Free, plus:</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm text-gray-300">10% off all products</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm text-gray-300">Free priority shipping</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm text-gray-300">Enhanced weekly newsletter</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm text-gray-300">Detailed research protocols</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Early product access</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Members-only bundles</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-black"></div>
-                      </div>
-                      <div className="text-sm">Priority customer support</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Elite Tier */}
-              <div className="bg-gray-900 text-white border-2 border-gray-800 hover:border-gray-700 transition-all">
-                <div className="p-8">
-                  <div className="text-xs font-mono tracking-wider text-gray-500 uppercase mb-2">Elite</div>
-                  <h3 className="text-3xl font-bold mb-2">Concierge</h3>
-                  <div className="text-4xl font-mono font-bold mb-6">
-                    $499<span className="text-lg text-gray-400">/month</span>
-                  </div>
-                  <button 
-                    onClick={() => alert('Elite membership signup coming soon!')}
-                    className="w-full py-3 bg-white text-black font-mono text-sm hover:bg-gray-200 transition-all mb-8"
-                  >
-                    Apply Now
-                  </button>
-                  
-                  <div className="space-y-4">
-                    {/* Store Credit Highlight */}
-                    <div className="bg-teal-400/10 border border-teal-400/30 p-4 -mx-2 mb-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-xs font-mono uppercase tracking-wider text-teal-400">Welcome Bonus</div>
-                        <div className="text-2xl font-mono font-bold text-teal-400">$600</div>
-                      </div>
-                      <div className="text-xs text-gray-400">First month credit • Use within 60 days</div>
-                    </div>
-
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-white"></div>
-                      </div>
-                      <div className="text-sm font-bold">Everything in Premium, plus:</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm text-gray-300">15% off all additional purchases</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">Comprehensive research library</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">Advanced dosing & stacking guides</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">1-on-1 research consultations</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">Dedicated account manager</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">Exclusive private community</div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-teal-400"></div>
-                      </div>
-                      <div className="text-sm">Custom research requests</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* Value Comparison */}
-        <section className="py-20 px-6 lg:px-12 bg-black border-t border-gray-900">
-          <div className="max-w-[900px] mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">Compare Membership Value</h2>
-            
-            <div className="bg-gray-900 border border-gray-800 p-8">
-              <div className="grid md:grid-cols-2 gap-12">
-                
-                {/* Premium Breakdown */}
-                <div>
-                  <h3 className="text-lg font-bold mb-6 pb-3 border-b border-gray-800 text-white">Premium ($199/year)</h3>
-                  <div className="space-y-4 text-sm font-mono">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Annual membership</span>
-                      <span className="font-bold text-white">$199</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">10% savings on $2,000</span>
-                      <span className="font-bold text-white">$200</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Free shipping (4 orders)</span>
-                      <span className="font-bold text-white">~$40</span>
-                    </div>
-                    <div className="pt-4 border-t border-gray-800 flex justify-between">
-                      <span className="font-bold text-white">Total value</span>
-                      <span className="font-bold text-white">$240+</span>
-                    </div>
-                    <div className="flex justify-between text-teal-400">
-                      <span className="font-bold">You save</span>
-                      <span className="font-bold">$41+/year</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Elite Breakdown */}
-                <div>
-                  <h3 className="text-lg font-bold mb-6 pb-3 border-b">Elite ($499/month)</h3>
-                  <div className="space-y-4 text-sm font-mono">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Monthly membership</span>
-                      <span className="font-bold">$499</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Included vial value</span>
-                      <span className="font-bold">~$150</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">15% savings on purchases</span>
-                      <span className="font-bold">$75+</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Research library access</span>
-                      <span className="font-bold">$99</span>
-                    </div>
-                    <div className="pt-4 border-t flex justify-between">
-                      <span className="font-bold">Total monthly value</span>
-                      <span className="font-bold">$324+</span>
-                    </div>
-                  </div>
-                </div>
-
+              <div className="border border-gray-800 py-3 text-center text-[10px] font-mono tracking-[0.2em] text-gray-600 uppercase">
+                Free Forever
               </div>
             </div>
 
-            <div className="mt-8 text-center">
-              <p className="text-sm text-gray-400 font-mono">
-                Break even with just 4 orders per year on Premium. Elite members receive $1,800+ 
-                in compound value annually, plus exclusive research access.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Deep Dive */}
-        <section className="py-20 px-6 lg:px-12 bg-black">
-          <div className="max-w-[1400px] mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-16 text-white">What You Get</h2>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Verified Purity</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Every batch third-party tested and certified above 99% purity. 
-                  Members get early access to COA reports before product launches.
-                </p>
+            {/* Base Premium */}
+            <div className="border-r border-gray-800 p-10 relative">
+              {/* Teal top rule — the only color accent */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#2DD4BF]"></div>
+              <p className="text-[9px] font-mono tracking-[0.3em] text-[#2DD4BF] uppercase mb-6">Base Premium</p>
+              <div className="text-5xl font-bold text-white mb-1 font-mono">$199</div>
+              <p className="text-xs text-gray-500 font-mono mb-2">per month</p>
+              {/* Credit pill */}
+              <div className="inline-flex items-center gap-2 border border-[#2DD4BF]/25 px-3 py-1.5 mb-8">
+                <div className="w-1.5 h-1.5 bg-[#2DD4BF]"></div>
+                <span className="text-[10px] font-mono tracking-[0.2em] text-[#2DD4BF] uppercase">$250 store credit / mo</span>
               </div>
-
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Research Library</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Premium members get access to our expanding database of research papers, 
-                  clinical studies, and detailed compound mechanisms. Elite members receive 
-                  custom research summaries.
-                </p>
-              </div>
-
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Private Community</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Join an exclusive community of serious researchers. Share protocols, 
-                  discuss findings, and collaborate on research. Elite members get access 
-                  to private channels.
-                </p>
-              </div>
-
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Expert Newsletter</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Premium members receive weekly deep-dives on specific compounds, 
-                  dosing strategies, and research updates. Elite members get personalized 
-                  research summaries based on their interests.
-                </p>
-              </div>
-
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Early Access</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Be first to access new compounds and limited batches. Premium members 
-                  get 24-hour advance notice. Elite members can request specific compounds 
-                  for priority sourcing.
-                </p>
-              </div>
-
-              <div className="bg-gray-900 border border-gray-800 p-8 hover:border-gray-700 transition-all">
-                <div className="w-12 h-12 bg-teal-400 flex items-center justify-center mb-6">
-                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Dedicated Support</h3>
-                <p className="text-gray-400 leading-relaxed">
-                  Premium members get priority email support with faster response times. 
-                  Elite members have a dedicated account manager available for research 
-                  consultations and product guidance.
-                </p>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* Research Club CTA - Premium & Exclusive */}
-        <section className="relative py-32 px-6 lg:px-12 bg-black overflow-hidden">
-          {/* Teal accent dots */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-            <div className="absolute top-20 left-[10%] w-2 h-2 bg-teal-400 rounded-full"></div>
-            <div className="absolute top-40 right-[15%] w-1.5 h-1.5 bg-teal-400 rounded-full"></div>
-            <div className="absolute bottom-32 left-[20%] w-1 h-1 bg-teal-400 rounded-full"></div>
-            <div className="absolute bottom-20 right-[25%] w-2 h-2 bg-teal-400 rounded-full"></div>
-          </div>
-
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-400/5 via-transparent to-transparent pointer-events-none"></div>
-
-          <div className="max-w-[900px] mx-auto relative z-10">
-            {/* Badge */}
-            <div className="flex justify-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 border border-teal-400/30 bg-teal-400/5">
-                <div className="w-1.5 h-1.5 bg-teal-400 rounded-full"></div>
-                <span className="text-[10px] font-mono tracking-[0.2em] text-teal-400 uppercase">Exclusive Access</span>
-                <div className="w-1.5 h-1.5 bg-teal-400 rounded-full"></div>
-              </div>
-            </div>
-
-            {/* Headline */}
-            <h2 className="text-5xl lg:text-6xl font-bold text-white text-center mb-6 leading-tight">
-              Join the Research Club
-            </h2>
-
-            {/* Subheading */}
-            <p className="text-xl text-gray-400 text-center mb-16 max-w-[650px] mx-auto leading-relaxed">
-              Access premium research compounds, exclusive member pricing, and expert protocols. 
-              <span className="text-teal-400"> Limited memberships available.</span>
-            </p>
-
-            {/* Membership Tiers */}
-            <div className="grid md:grid-cols-2 gap-6 mb-12">
-              {/* Essential Tier */}
-              <div className="group relative bg-white/5 border border-white/10 p-8 hover:border-white/30 transition-all duration-300 hover:-translate-y-1">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                
-                <div className="text-xs font-mono tracking-[0.15em] text-gray-500 uppercase mb-2">Essential</div>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-mono font-bold text-white">$199</span>
-                  <span className="text-gray-500 font-mono text-sm">/year</span>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3 text-sm text-gray-300">
-                    <div className="w-1 h-1 bg-white rounded-full mt-2 shrink-0"></div>
-                    <span>10% off all products</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-gray-300">
-                    <div className="w-1 h-1 bg-white rounded-full mt-2 shrink-0"></div>
-                    <span>Free shipping on all orders</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-gray-300">
-                    <div className="w-1 h-1 bg-white rounded-full mt-2 shrink-0"></div>
-                    <span>Priority support</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-gray-300">
-                    <div className="w-1 h-1 bg-white rounded-full mt-2 shrink-0"></div>
-                    <span>Members-only bundles</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={() => navigateTo('membership')}
-                  className="w-full py-4 bg-white text-black font-mono text-sm hover:bg-gray-100 transition-all group-hover:bg-white"
-                >
-                  START ESSENTIAL
-                </button>
-              </div>
-
-              {/* Elite Tier */}
-              <div className="group relative bg-gradient-to-br from-teal-400/10 via-teal-400/5 to-transparent border border-teal-400/30 p-8 hover:border-teal-400/50 transition-all duration-300 hover:-translate-y-1">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-teal-400 to-transparent"></div>
-                
-                {/* Elite Badge */}
-                <div className="absolute -top-3 right-8">
-                  <div className="px-3 py-1 bg-teal-400 text-black text-[9px] font-mono tracking-[0.15em] uppercase">
-                    💎 Elite Access
+              <div className="space-y-3 mb-10">
+                {[
+                  'Everything in Free',
+                  '$250 monthly store credit',
+                  '10% off all products',
+                  'Free priority shipping',
+                  '24h early product access',
+                  'Weekly research deep-dive',
+                  'Priority support',
+                  'Members-only bundles',
+                ].map(f => (
+                  <div key={f} className="flex items-center gap-3">
+                    <div className="w-3 h-px bg-gray-500"></div>
+                    <span className="text-xs text-gray-300">{f}</span>
                   </div>
-                </div>
-
-                <div className="text-xs font-mono tracking-[0.15em] text-teal-400 uppercase mb-2">Elite</div>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-mono font-bold text-white">$499</span>
-                  <span className="text-gray-500 font-mono text-sm">/month</span>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3 text-sm text-white">
-                    <div className="w-1 h-1 bg-teal-400 rounded-full mt-2 shrink-0"></div>
-                    <span><strong className="text-teal-400">1 free vial/month</strong> (your choice)</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-white">
-                    <div className="w-1 h-1 bg-teal-400 rounded-full mt-2 shrink-0"></div>
-                    <span>15% off additional products</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-white">
-                    <div className="w-1 h-1 bg-teal-400 rounded-full mt-2 shrink-0"></div>
-                    <span>Dedicated account manager</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-sm text-white">
-                    <div className="w-1 h-1 bg-teal-400 rounded-full mt-2 shrink-0"></div>
-                    <span>Custom dosing protocols</span>
-                  </li>
-                </ul>
-
-                <button
-                  onClick={() => navigateTo('membership')}
-                  className="w-full py-4 bg-teal-400 text-black font-mono text-sm hover:bg-teal-300 transition-all"
-                >
-                  APPLY FOR ELITE
-                </button>
+                ))}
               </div>
-            </div>
-
-            {/* Bottom text */}
-            <div className="text-center">
-              <p className="text-xs font-mono text-gray-600 mb-3">
-                No commitment. Cancel anytime.
-              </p>
               <button
-                onClick={() => navigateTo('membership')}
-                className="text-sm text-teal-400 hover:text-teal-300 font-mono transition-colors inline-flex items-center gap-2"
+                onClick={() => alert('Base Premium launches with payment processing. Join the newsletter to be notified.')}
+                className="w-full border border-gray-700 py-3.5 text-[10px] font-mono tracking-[0.25em] text-gray-400 uppercase hover:border-white hover:text-white transition-all duration-200"
               >
-                View all membership benefits
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                Coming Soon
               </button>
+            </div>
+
+            {/* Full Premium */}
+            <div className="p-10 relative bg-[#080808]">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gray-700"></div>
+              <p className="text-[9px] font-mono tracking-[0.3em] text-gray-400 uppercase mb-6">Full Premium</p>
+              <div className="text-5xl font-bold text-white mb-1 font-mono">$499</div>
+              <p className="text-xs text-gray-500 font-mono mb-2">per month</p>
+              {/* Credit pill */}
+              <div className="inline-flex items-center gap-2 border border-[#2DD4BF]/25 px-3 py-1.5 mb-8">
+                <div className="w-1.5 h-1.5 bg-[#2DD4BF]"></div>
+                <span className="text-[10px] font-mono tracking-[0.2em] text-[#2DD4BF] uppercase">$600 store credit / mo</span>
+              </div>
+              <div className="space-y-3 mb-10">
+                {[
+                  'Everything in Base Premium',
+                  '$600 monthly store credit',
+                  '15% off all products',
+                  'Free overnight shipping',
+                  '48h early product access',
+                  'Dedicated account manager',
+                  'Custom research protocols',
+                  '1-on-1 consultations',
+                  'Private research community',
+                  'Custom compound sourcing',
+                ].map(f => (
+                  <div key={f} className="flex items-center gap-3">
+                    <div className="w-3 h-px bg-gray-600"></div>
+                    <span className="text-xs text-gray-300">{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => alert('Full Premium launches with payment processing. Join the newsletter to be notified.')}
+                className="w-full border border-gray-700 py-3.5 text-[10px] font-mono tracking-[0.25em] text-gray-400 uppercase hover:border-white hover:text-white transition-all duration-200"
+              >
+                Coming Soon
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Value breakdown — two columns, no color noise */}
+        <section className="py-20 px-6 lg:px-12">
+          <div className="max-w-[1100px] mx-auto">
+            <div className="grid md:grid-cols-2 gap-0 border border-gray-800">
+
+              <div className="border-r border-gray-800 p-10">
+                <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 uppercase mb-8">Base Premium — Month 1 Value</p>
+                <div className="space-y-4 font-mono text-sm">
+                  {[
+                    ['Store credit', '$250'],
+                    ['10% savings on $2,000 spend', '$200'],
+                    ['Free priority shipping', '~$40'],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex justify-between">
+                      <span className="text-gray-600">{label}</span>
+                      <span className="text-white font-bold">{val}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-gray-800 pt-4 flex justify-between">
+                    <span className="text-white font-bold">Value delivered</span>
+                    <span className="text-[#2DD4BF] font-bold">$490+</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Cost</span>
+                    <span className="text-white">$199</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-10">
+                <p className="text-[9px] font-mono tracking-[0.3em] text-gray-600 uppercase mb-8">Full Premium — Month 1 Value</p>
+                <div className="space-y-4 font-mono text-sm">
+                  {[
+                    ['Store credit', '$600'],
+                    ['15% savings on $3,000 spend', '$450'],
+                    ['Free overnight shipping', '~$80'],
+                    ['Dedicated manager access', '~$200'],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex justify-between">
+                      <span className="text-gray-600">{label}</span>
+                      <span className="text-white font-bold">{val}</span>
+                    </div>
+                  ))}
+                  <div className="border-t border-gray-800 pt-4 flex justify-between">
+                    <span className="text-white font-bold">Value delivered</span>
+                    <span className="text-[#2DD4BF] font-bold">$1,330+</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Cost</span>
+                    <span className="text-white">$499</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <p className="text-[10px] font-mono text-gray-700 mt-6 tracking-wider text-center uppercase">
+              Store credit alone exceeds the membership cost. Subscriptions launch with payment processing.
+            </p>
+          </div>
+        </section>
+
+        {/* Feature grid — no teal icons, just clean copy */}
+        <section className="pb-20 px-6 lg:px-12">
+          <div className="max-w-[1100px] mx-auto">
+            <p className="text-[9px] font-mono tracking-[0.35em] text-gray-600 uppercase mb-12">What membership includes</p>
+            <div className="grid md:grid-cols-3 gap-0 border border-gray-800">
+              {[
+                { num: '01', title: 'Monthly Store Credit', body: 'Renews every billing cycle. Applies automatically at checkout — no codes. $250 on Base, $600 on Full.' },
+                { num: '02', title: 'Early Access', body: '24h window on Base Premium. 48h on Full Premium. First in line before every public launch.' },
+                { num: '03', title: 'Automatic Discount', body: '10% off every order on Base. 15% on Full. No minimums, no limits, no coupon codes.' },
+                { num: '04', title: 'Free Shipping', body: 'Priority shipping on Base Premium. Overnight on Full Premium. Every order, every time.' },
+                { num: '05', title: 'Research Support', body: 'Priority support on Base. Full Premium members get a dedicated account manager and 1-on-1 consultations.' },
+                { num: '06', title: 'Expert Newsletter', body: 'Weekly deep-dives on compounds, mechanisms, and protocols. Personalized for Full Premium members.' },
+              ].map((item, i) => (
+                <div
+                  key={item.num}
+                  className={`p-8 ${i % 3 !== 2 ? 'border-r border-gray-800' : ''} ${i < 3 ? 'border-b border-gray-800' : ''}`}
+                >
+                  <p className="text-[9px] font-mono text-[#2DD4BF] tracking-[0.25em] mb-4">{item.num}</p>
+                  <h3 className="text-sm font-bold text-white mb-3">{item.title}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA — stark, no embellishments */}
+        <section className="py-24 px-6 lg:px-12 border-t border-gray-900">
+          <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row items-start md:items-end justify-between gap-12">
+            <div>
+              <p className="text-[9px] font-mono tracking-[0.35em] text-gray-600 uppercase mb-4">Launching Soon</p>
+              <h2 className="text-4xl font-bold text-white leading-tight">
+                Memberships open<br />
+                soon.
+              </h2>
+              <p className="text-gray-500 text-sm mt-4 max-w-md leading-relaxed">
+                Subscribe to the newsletter and you'll be first to know — 
+                early subscribers may receive a launch discount.
+              </p>
+            </div>
+            <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => alert('Coming soon — join the newsletter to be notified.')}
+                  className="px-8 py-4 border border-gray-700 text-[10px] font-mono tracking-[0.25em] text-gray-400 uppercase hover:border-white hover:text-white transition-all"
+                >
+                  Base Premium — $199/mo
+                </button>
+                <button
+                  onClick={() => alert('Coming soon — join the newsletter to be notified.')}
+                  className="px-8 py-4 bg-white text-black text-[10px] font-mono tracking-[0.25em] uppercase hover:bg-gray-100 transition-all"
+                >
+                  Full Premium — $499/mo
+                </button>
+              </div>
+              <p className="text-[10px] font-mono text-gray-700 tracking-wider">Cancel anytime. No commitment.</p>
             </div>
           </div>
         </section>
@@ -2990,6 +2811,10 @@ export default function TruchemWebsite() {
         {/* Footer */}
               <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
+          {/* Footer Newsletter */}
+          <FooterNewsletter />
+
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -3013,10 +2838,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -3039,6 +2865,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
@@ -3252,15 +3079,16 @@ export default function TruchemWebsite() {
                           Add to Cart
                         </button>
                       ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNotifyClick(product);
-                          }}
-                          className="flex-1 py-3 bg-gray-800 text-white font-mono text-xs hover:bg-gray-700 transition-all"
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1"
                         >
-                          Notify Me
-                        </button>
+                          <BackInStockNotification 
+                            productId={product.id}
+                            productName={product.name}
+                            userEmail={user?.primaryEmailAddress?.emailAddress}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -3277,8 +3105,15 @@ export default function TruchemWebsite() {
           </div>
         </section>
 
+        {/* Newsletter Block */}
+        <NewsletterBlock />
+
               <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
+          {/* Footer Newsletter */}
+          <FooterNewsletter />
+
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -3302,10 +3137,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -3328,6 +3164,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
@@ -3529,218 +3366,6 @@ export default function TruchemWebsite() {
   }
 
   // ========================================
-  // ACCOUNT PAGE
-  // ========================================
-  if (currentPage === 'account') {
-    return (
-      <div className="min-h-screen bg-white">
-        {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
-          <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-            <div className="flex items-center justify-between h-20">
-              <button onClick={() => navigateTo('home')} className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-black flex items-center justify-center"><VialIcon inverted={false} size={38} /></div>
-                <div>
-                  <div className="text-2xl font-mono text-black lowercase" style={{ letterSpacing: '0.08em' }}>
-                    <span className="font-bold">true</span>
-                    <span className="font-normal">chem</span>
-                  </div>
-                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-500 uppercase">99%+ Certified</div>
-                </div>
-              </button>
-              <button 
-                onClick={() => navigateTo('cart')}
-                className="p-2 hover:bg-gray-100 rounded-lg relative"
-              >
-                <ShoppingCart size={20} />
-                {cartItemCount > 0 && (
-                  <span className="absolute top-1 right-1 w-5 h-5 bg-black text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <div className="pt-32 pb-20 px-6">
-          <div className="max-w-md mx-auto">
-            
-            {/* Sign Up / Login Form */}
-            <div className="text-center mb-12">
-              <div className="inline-block px-3 py-1 bg-black text-white text-[10px] font-mono tracking-[0.2em] uppercase mb-6">
-                Research Club
-              </div>
-              <h1 className="text-4xl font-bold mb-4">Create Your Account</h1>
-              <p className="text-gray-600">
-                Join truechem to access premium research compounds, get notified when products are back in stock, and manage your orders.
-              </p>
-            </div>
-
-            {/* Clerk Sign-Up Component Will Go Here */}
-            <div className="bg-gray-50 border-2 border-gray-200 p-8 mb-6">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-black text-white rounded-full mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold mb-2">Clerk Authentication</h2>
-                <p className="text-sm text-gray-600 mb-6">
-                  Secure sign-up and login powered by Clerk
-                </p>
-              </div>
-
-              {/* Placeholder - Replace with Clerk Component */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-mono font-bold mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-mono font-bold mb-2">Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 border border-gray-300 focus:border-black focus:outline-none font-mono text-sm"
-                  />
-                </div>
-                <button 
-                  onClick={() => alert('Integrate Clerk authentication here')}
-                  className="w-full py-3 bg-black text-white font-mono text-sm hover:bg-gray-800 transition-all"
-                >
-                  Create Account
-                </button>
-                <div className="text-center">
-                  <button 
-                    onClick={() => alert('Integrate Clerk login here')}
-                    className="text-sm text-gray-600 hover:text-black font-mono"
-                  >
-                    Already have an account? <span className="underline">Log in</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Email List Sign-Up (Omnisend) */}
-            <div className="bg-black text-white p-8 mb-6">
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-400 text-black rounded-full mb-4">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold mb-2">Stay Updated</h2>
-                <p className="text-sm text-gray-400">
-                  Get notified about new products, restock alerts, and exclusive member offers
-                </p>
-              </div>
-
-              {/* Omnisend Integration Placeholder */}
-              <div className="space-y-4">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email"
-                  className="w-full px-4 py-3 bg-white text-black border-2 border-gray-800 focus:border-teal-400 focus:outline-none font-mono text-sm"
-                />
-                <button 
-                  onClick={() => alert('Integrate Omnisend email list here')}
-                  className="w-full py-3 bg-teal-400 text-black font-mono text-sm font-bold hover:bg-teal-300 transition-all"
-                >
-                  Subscribe to Updates
-                </button>
-                <p className="text-xs text-gray-500 text-center">
-                  We'll never spam you. Unsubscribe anytime.
-                </p>
-              </div>
-            </div>
-
-            {/* Benefits */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border border-gray-200 p-4">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-bold mb-1">Restock Alerts</h3>
-                <p className="text-xs text-gray-600">Get notified when products are back</p>
-              </div>
-              
-              <div className="border border-gray-200 p-4">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-bold mb-1">Early Access</h3>
-                <p className="text-xs text-gray-600">Be first to access new compounds</p>
-              </div>
-              
-              <div className="border border-gray-200 p-4">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-bold mb-1">Order Tracking</h3>
-                <p className="text-xs text-gray-600">Track all your orders in one place</p>
-              </div>
-              
-              <div className="border border-gray-200 p-4">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-bold mb-1">COA Library</h3>
-                <p className="text-xs text-gray-600">Access all certificates of analysis</p>
-              </div>
-            </div>
-
-            {/* Back to Home */}
-            <div className="text-center mt-8">
-              <button 
-                onClick={() => navigateTo('home')}
-                className="text-sm text-gray-600 hover:text-black font-mono"
-              >
-                ← Back to Home
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="py-16 px-6 lg:px-12 bg-black text-white">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-white flex items-center justify-center"><VialIcon inverted={true} size={38} /></div>
-                <div>
-                  <div className="text-2xl font-mono lowercase" style={{ letterSpacing: '0.08em' }}>
-                    <span className="font-bold">true</span>
-                    <span className="font-normal">chem</span>
-                  </div>
-                  <div className="text-[9px] font-mono tracking-[0.15em] text-gray-400 uppercase">99%+ Certified</div>
-                </div>
-              </div>
-              <p className="text-sm text-gray-400 mb-4">
-                Ultra-pure research compounds for scientific research
-              </p>
-              <div className="text-xs text-gray-500 font-mono">
-                © 2025 truechem. All rights reserved.
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    );
-  }
 
   if (currentPage === 'product' && selectedProduct) {
     return (
@@ -4000,6 +3625,10 @@ export default function TruchemWebsite() {
 
             <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
+          {/* Footer Newsletter */}
+          <FooterNewsletter />
+
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -4023,10 +3652,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -4049,6 +3679,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
@@ -5379,26 +5010,26 @@ export default function TruchemWebsite() {
               </button>
 
               {/* Account Buttons */}
-              {isLoggedIn ? (
+              {isSignedIn ? (
                 <button 
-                  onClick={() => navigateTo('account')}
+                  onClick={() => router.push('/account/dashboard')}
                   className="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-all group"
                 >
                   <div className="w-8 h-8 bg-black text-white flex items-center justify-center rounded-full font-mono text-sm group-hover:bg-gray-800 transition-all">
-                    {mockUser.firstName[0]}
+                    {user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || 'A'}
                   </div>
                   <span className="text-sm font-medium">Account</span>
                 </button>
               ) : (
                 <div className="hidden md:flex items-center gap-2">
                   <button 
-                    onClick={() => navigateTo('account')}
+                    onClick={() => router.push('/sign-in')}
                     className="px-4 py-2 text-sm font-mono hover:bg-gray-100 rounded-lg transition-all"
                   >
                     Log In
                   </button>
                   <button 
-                    onClick={() => navigateTo('account')}
+                    onClick={() => router.push('/sign-up')}
                     className="px-4 py-2 bg-black text-white text-sm font-mono hover:bg-gray-800 rounded-lg transition-all"
                   >
                     Sign Up
@@ -6087,8 +5718,12 @@ export default function TruchemWebsite() {
         </div>
       </section>
 
+      {/* Newsletter Block */}
+      <NewsletterBlock />
+
             <footer className="py-16 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-[1400px] mx-auto">
+          
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             {/* Company */}
             <div>
@@ -6112,10 +5747,11 @@ export default function TruchemWebsite() {
               <div className="text-xs font-mono tracking-wider text-gray-400 uppercase mb-4">Products</div>
               <ul className="space-y-2 text-sm">
                 <li><button onClick={() => goToCategory('glp1')} className="text-gray-300 hover:text-white transition-colors">GLP-1 Agonists</button></li>
-                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Factors</button></li>
-                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery Compounds</button></li>
-                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic Compounds</button></li>
+                <li><button onClick={() => goToCategory('growth')} className="text-gray-300 hover:text-white transition-colors">Growth Hormone</button></li>
+                <li><button onClick={() => goToCategory('recovery')} className="text-gray-300 hover:text-white transition-colors">Recovery</button></li>
+                <li><button onClick={() => goToCategory('metabolic')} className="text-gray-300 hover:text-white transition-colors">Metabolic</button></li>
                 <li><button onClick={() => goToCategory('bundles')} className="text-gray-300 hover:text-white transition-colors">Bundles</button></li>
+                <li><button onClick={() => goToCategory('medical-supplies')} className="text-gray-300 hover:text-white transition-colors">Medical Supplies</button></li>
                 <li><button onClick={() => navigateTo('membership')} className="text-gray-300 hover:text-white transition-colors">Research Club</button></li>
               </ul>
             </div>
@@ -6138,6 +5774,7 @@ export default function TruchemWebsite() {
                 <li><button onClick={() => navigateTo('ourstory')} className="text-gray-300 hover:text-white transition-colors">About Us</button></li>
                 <li><button onClick={() => navigateTo('testing')} className="text-gray-300 hover:text-white transition-colors">Quality Assurance</button></li>
                 <li><button onClick={() => navigateTo('contact')} className="text-gray-300 hover:text-white transition-colors">Contact</button></li>
+                <li><button onClick={() => router.push('/privacy')} className="text-gray-300 hover:text-white transition-colors">Privacy Policy</button></li>
                 <li><button onClick={() => navigateTo('tos')} className="text-gray-300 hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
             </div>
