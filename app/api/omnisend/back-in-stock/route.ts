@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_KEY
+  
+  if (!url || !key) {
+    return null
+  }
+  
+  return createClient(url, key)
+}
 
 export async function POST(request: Request) {
   try {
+    const supabase = getSupabaseClient()
+    
     const { email, user_id, product_id, product_name, size } = await request.json()
 
     if (!email || !product_id || !product_name) {
@@ -18,11 +26,20 @@ export async function POST(request: Request) {
     }
 
     // Subscribe to Omnisend
+    const omnisendApiKey = process.env.OMNISEND_API_KEY
+    if (!omnisendApiKey) {
+      console.error('OMNISEND_API_KEY not configured')
+      return NextResponse.json(
+        { success: false, error: 'Service not configured' },
+        { status: 503 }
+      )
+    }
+
     const omnisendResponse = await fetch('https://api.omnisend.com/v3/contacts', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': process.env.OMNISEND_API_KEY!,
+        'X-API-KEY': omnisendApiKey,
       },
       body: JSON.stringify({
         email,
@@ -46,18 +63,20 @@ export async function POST(request: Request) {
 
     const omnisendData = await omnisendResponse.json()
 
-    // Save to Supabase
-    await supabase
-      .from('back_in_stock_notifications')
-      .insert({
-        user_id: user_id || null,
-        email,
-        product_id,
-        product_name,
-        size: size || null,
-        omnisend_automation_id: omnisendData.contactID,
-        notified: false
-      })
+    // Save to Supabase if available
+    if (supabase) {
+      await supabase
+        .from('back_in_stock_notifications')
+        .insert({
+          user_id: user_id || null,
+          email,
+          product_id,
+          product_name,
+          size: size || null,
+          omnisend_automation_id: omnisendData.contactID,
+          notified: false
+        })
+    }
 
     return NextResponse.json({
       success: true,

@@ -19,10 +19,16 @@ import { trackEvent, addTags, removeTags } from '@/lib/omnisend'
 import crypto from 'crypto'
 
 // Initialize Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_KEY
+  
+  if (!url || !key) {
+    return null
+  }
+  
+  return createClient(url, key)
+}
 
 /**
  * Verify PayRio webhook signature
@@ -45,6 +51,8 @@ function verifyPayRioSignature(
 
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabaseClient()
+    
     // Get webhook signature
     const signature = req.headers.get('X-PayRio-Signature')
     if (!signature) {
@@ -112,28 +120,32 @@ export async function POST(req: Request) {
       ? JSON.parse(metadata.shipping_address) 
       : null
 
-    // 1. Insert order into Supabase
-    const { data: order, error: dbError } = await supabase
-      .from('orders')
-      .insert({
-        id: orderId,
-        payment_id: paymentId,
-        email,
-        total: amount / 100, // Convert cents to dollars
-        currency: currency.toUpperCase(),
-        items,
-        shipping_address: shippingAddress,
-        status: 'paid',
-        paid_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
+    // 1. Insert order into Supabase (if available)
+    if (supabase) {
+      const { data: order, error: dbError } = await supabase
+        .from('orders')
+        .insert({
+          id: orderId,
+          payment_id: paymentId,
+          email,
+          total: amount / 100, // Convert cents to dollars
+          currency: currency.toUpperCase(),
+          items,
+          shipping_address: shippingAddress,
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-    if (dbError) {
-      console.error('Failed to insert order into Supabase:', dbError)
-      // Don't fail webhook - PayRio payment still succeeded
+      if (dbError) {
+        console.error('Failed to insert order into Supabase:', dbError)
+        // Don't fail webhook - PayRio payment still succeeded
+      } else {
+        console.log(`✓ Order inserted into Supabase: ${orderId}`)
+      }
     } else {
-      console.log(`✓ Order inserted into Supabase: ${orderId}`)
+      console.log('Supabase not configured, skipping order storage')
     }
 
     // 2. Track "order_placed" event in Omnisend

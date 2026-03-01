@@ -12,10 +12,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize Supabase client
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ ok: false, error: 'Supabase not configured' }, { status: 503 });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Generate fake order data
     const orderNumber = `TC-TEST-${Date.now()}`;

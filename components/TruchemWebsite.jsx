@@ -268,33 +268,35 @@ export default function TruchemWebsite() {
 
   // Navigate to page with scroll to top and smooth animation
   const navigateTo = (page) => {
-    // For auth and checkout pages, navigate immediately without animation
-    if (page === 'checkout') {
+    // Map old page names to new routes
+    const routes = {
+      'home': '/',
+      'contact': '/contact',
+      'privacy': '/privacy',
+      'tos': '/terms',
+      'terms': '/terms',
+      'products': '/products',
+      'cart': '/cart',
+      'checkout': '/checkout',
+      'signin': '/sign-in',
+      'signup': '/sign-up',
+      'membership': '/membership',
+      'coa': '/coa',
+      'manufacturing': '/manufacturing',
+      'ourstory': '/about',
+      'our-story': '/about',
+      'testing': '/testing',
+      'faq': '/faq'
+    };
+
+    const route = routes[page] || '/';
+    
+    // Save cart before navigation
+    if (page === 'checkout' || page === 'cart') {
       localStorage.setItem('cart', JSON.stringify(cart));
-      router.push('/checkout');
-      return;
     }
     
-    if (page === 'signin') {
-      router.push('/sign-in');
-      return;
-    }
-    
-    if (page === 'signup') {
-      router.push('/sign-up');
-      return;
-    }
-    
-    // For regular pages, use animation
-    setPageTransition(true);
-    
-    setTimeout(() => {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setTimeout(() => {
-        setPageTransition(false);
-      }, 50);
-    }, 200);
+    router.push(route);
   };
 
   useEffect(() => {
@@ -1141,14 +1143,7 @@ export default function TruchemWebsite() {
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const viewProduct = (product) => {
-    setSelectedProduct(product);
-    setSelectedSize(product.sizes[0]);
-    setPageTransition(true);
-    setTimeout(() => {
-      setCurrentPage('product');
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setPageTransition(false);
-    }, 150);
+    router.push(`/products/${product.id}`);
   };
 
   const filteredProducts = [...products, ...medicalSupplies].filter(product => {
@@ -1174,13 +1169,8 @@ export default function TruchemWebsite() {
 
   // Helper to navigate to products with category filter
   const goToCategory = (category) => {
-    setCategoryFilter(category);
-    setPageTransition(true);
-    setTimeout(() => {
-      setCurrentPage('products');
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      setPageTransition(false);
-    }, 150);
+    const url = category ? `/products?category=${category}` : '/products';
+    router.push(url);
   };
 
   // Handle stock notification request
